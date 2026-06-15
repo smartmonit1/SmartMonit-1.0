@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile in the application",
+      "type": "object",
+      "properties": {
+        "nid": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "serviceId": { "type": "string" }
+      }
+    },
+    "Infrastructure": {
+      "type": "object",
+      "title": "Infrastructure",
+      "description": "Sports infrastructure",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "serviceId": { "type": "string" }
+      }
+    },
+    "Equipment": {
+      "type": "object",
+      "title": "Equipment",
+      "description": "Sports equipment",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "infrastructureId": { "type": "string" }
+      }
+    },
+    "Program": {
+      "type": "object",
+      "title": "Program",
+      "description": "Workout program",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" }
+      }
+    },
+    "CollectiveSession": {
+      "type": "object",
+      "title": "CollectiveSession",
+      "description": "Group workout session",
+      "properties": {
+        "id": { "type": "string" },
+        "serviceId": { "type": "string" }
+      }
+    },
+    "Route": {
+      "type": "object",
+      "title": "Route",
+      "description": "Workout route",
+      "properties": {
+        "id": { "type": "string" }
+      }
+    },
+    "ActiveSession": {
+      "type": "object",
+      "title": "ActiveSession",
+      "description": "Current active session",
+      "properties": {
+        "id": { "type": "string" }
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "title": "Notification",
+      "description": "Global user notification",
+      "properties": {
+        "id": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "global_data/global": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Global storage since standard UI does not utilize collections"
+    }
+  }
+}

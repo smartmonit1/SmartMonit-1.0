@@ -1,0 +1,7 @@
+{
+  "name": "Smart Monit 1.0 essai amélioration",
+  "description": "Application militaire de gestion d\u0027un service EPMS et préparation physique opérationnelle assistée par IA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
