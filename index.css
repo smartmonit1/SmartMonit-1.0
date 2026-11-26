@@ -260,6 +260,12 @@ textarea::placeholder {
   font-size: 1rem;
 }
 
+.pwa-floating-banner {
+  bottom: calc(9rem + env(safe-area-inset-bottom));
+  left: 0.75rem;
+  right: 0.75rem;
+}
+
 @supports (padding: env(safe-area-inset-top)) {
   header {
     padding-top: max(0.75rem, env(safe-area-inset-top));
@@ -464,6 +470,10 @@ textarea::placeholder {
 }
 
 @media (max-width: 767px) {
+  .pwa-install-banner {
+    display: none;
+  }
+
   .app-main {
     padding-top: 1rem;
     padding-bottom: max(6rem, calc(4.5rem + env(safe-area-inset-bottom)));
@@ -588,6 +598,13 @@ textarea::placeholder {
   .app-main {
     padding-top: 1.5rem;
     padding-bottom: 2rem;
+  }
+
+  .pwa-floating-banner {
+    bottom: 1rem;
+    left: 1rem;
+    right: auto;
+    max-width: 24rem;
   }
 
   .app-main .bg-white.rounded-2xl,

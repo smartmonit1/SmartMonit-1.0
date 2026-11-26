@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserRole, UserProfile, AppNotification } from '../types';
 import { db, getSyncStatus } from '../services/mockDatabase';
-import { getBaseCode } from '../utils/bases';
 import { formatDateTimeFr } from '../utils/compliance';
 import InstallPWAButton from './InstallPWAButton';
 
@@ -121,16 +120,14 @@ const Layout: React.FC<LayoutProps> = ({
           />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base md:text-lg font-black tracking-wider leading-none">SMART MONIT</h1>
-              <span className="text-[9px] font-black uppercase bg-action-500 text-military-950 px-1.5 py-0.5 rounded">1.0</span>
-            </div>
-            <div className="flex items-center gap-2 text-[10px] text-military-300 font-semibold mt-0.5">
-              <span>{getBaseCode(user.serviceId)}</span>
-              <span>•</span>
-              <span className="uppercase">{roleBadgeLabel}</span>
-              <span className="hidden sm:inline-flex items-center gap-1 ml-1 text-[9px] px-1.5 py-0.2 rounded bg-white/10">
-                <span className={`w-1.5 h-1.5 rounded-full ${syncOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                {syncOnline ? 'Sync Cloud' : 'Sync Local'}
+                  <h1 className="text-base md:text-lg font-black tracking-wider leading-none">SMART MONIT</h1>
+                  <span className="text-[9px] font-black uppercase bg-action-500 text-military-950 px-1.5 py-0.5 rounded">Test</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-military-300 font-semibold mt-0.5">
+                  <span className="uppercase">{roleBadgeLabel}</span>
+                  <span className="hidden sm:inline-flex items-center gap-1 ml-1 text-[9px] px-1.5 py-0.2 rounded bg-white/10">
+                    <span className={`w-1.5 h-1.5 rounded-full ${syncOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                    {syncOnline ? 'Synchronisé' : 'Mode local'}
               </span>
             </div>
           </div>
@@ -198,8 +195,7 @@ const Layout: React.FC<LayoutProps> = ({
                 Espace {roleBadgeLabel}
               </div>
               <div className="text-xs font-black text-military-900 truncate">{user.name}</div>
-              <div className="text-[10px] font-mono text-military-500">ID {user.nid}</div>
-              {user.unit && <div className="text-[10px] text-action-700 font-bold truncate mt-0.5">{user.unit}</div>}
+              <div className="text-[10px] text-military-500">Compte {roleBadgeLabel.toLowerCase()}</div>
             </div>
 
             <nav className="space-y-1.5" aria-label="Navigation principale">
@@ -230,7 +226,7 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="p-3 rounded-xl bg-military-900 text-white text-[10px] space-y-1">
             <div className="font-black uppercase tracking-widest text-action-400">SmartMonit</div>
             <p className="text-military-200 leading-relaxed">
-              Pratique, coaching et gestion des installations réunis. Les recommandations restent des aides à la décision.
+              Sport, coaching et gestion des espaces réunis. Les recommandations restent des aides à la décision.
             </p>
           </div>
         </aside>

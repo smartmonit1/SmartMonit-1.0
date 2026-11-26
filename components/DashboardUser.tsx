@@ -430,18 +430,15 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-military-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-black text-military-900">Bonjour, {user.name}</h2>
-          <p className="text-military-500 text-xs font-semibold mt-0.5">
-            {getBaseName(user.serviceId)} {user.unit ? `• ${user.unit}` : ''}
+          <p className="text-military-500 text-sm font-medium mt-1">
+            Votre espace sport, coaching et réservations
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <span className="px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg font-black">
-              VMA : {vma} km/h
+            VMA estimée : {vma} km/h
             </span>
             <span className="px-2.5 py-1 bg-military-900 text-action-400 rounded-lg font-black">
-              Readiness : {calculateReadinessScore(hasDaily).score}/100
-            </span>
-            <span className="px-2.5 py-1 bg-military-50 text-military-800 border border-military-200 rounded-lg font-bold">
-              {user.jobType}
+            État de forme : {calculateReadinessScore(hasDaily).score}/100
             </span>
             {zoneBadge()}
           </div>
@@ -452,7 +449,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
             className="px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider bg-military-900 text-white hover:bg-military-800 shadow-sm transition-all flex items-center gap-1.5"
           >
             <span className="material-icons text-base text-action-400">meeting_room</span>
-            Réserver Salle / Cours
+            Réserver un espace ou un cours
           </button>
           <button
             onClick={() => setShowDaily(true)}
@@ -463,7 +460,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
             }`}
           >
             <span className="material-icons text-base">monitor_heart</span>
-            {hasDaily ? 'Modifier mon bilan' : 'Faire mon Bilan Forme'}
+            {hasDaily ? 'Modifier mon bilan forme' : 'Faire mon bilan forme'}
           </button>
         </div>
       </div>

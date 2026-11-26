@@ -731,24 +731,24 @@ const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => 
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-military-100">
-              <div className="text-gray-400 text-[10px] font-black uppercase">Membres ({getBaseCode(user.serviceId)})</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase">Utilisateurs suivis</div>
               <div className="text-3xl font-black text-military-900 mt-1">
                 {users.filter((u) => u.role === UserRole.USER).length}
               </div>
             </div>
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-military-100">
-              <div className="text-gray-400 text-[10px] font-black uppercase">En Séance (Live)</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase">Séances en cours</div>
               <div className="text-3xl font-black text-action-600 mt-1 flex items-center gap-2">
                 {activeSessions.length}
                 {activeSessions.length > 0 && <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />}
               </div>
             </div>
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-military-100">
-              <div className="text-gray-400 text-[10px] font-black uppercase">Actions Requises</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase">Actions à traiter</div>
               <div className="text-3xl font-black text-red-600 mt-1">{alerts.length}</div>
             </div>
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-military-100">
-              <div className="text-gray-400 text-[10px] font-black uppercase">Matériel HS / Maint.</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase">Matériel à suivre</div>
               <div className="text-3xl font-black text-amber-600 mt-1">
                 {equipment.filter((e) => e.status !== 'Operational').length}
               </div>
@@ -805,7 +805,7 @@ const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => 
             <div className="bg-red-50/70 rounded-3xl p-5 border border-red-200">
               <h3 className="font-black text-red-900 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
                 <span className="material-icons text-base text-red-600">notifications_active</span>
-                Actions Requises ({alerts.length})
+                Actions à traiter ({alerts.length})
               </h3>
               <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar pr-1">
                 {alerts.map((a) => (

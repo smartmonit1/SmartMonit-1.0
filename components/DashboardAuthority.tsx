@@ -236,8 +236,8 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           <div className="flex bg-military-800 p-1 rounded-xl" role="group" aria-label="Périmètre du tableau de bord">
             {(
               [
-                { id: 'UNIT', label: 'Unité' },
-                { id: 'BASE', label: 'Base' },
+                { id: 'UNIT', label: 'Équipe' },
+                { id: 'BASE', label: 'Structure' },
                 { id: 'AAE', label: 'Toutes les structures' }
               ] as { id: AuthorityScope; label: string }[]
             ).map((sc) => (
@@ -264,7 +264,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
               onChange={(e) => setSelectedUnitFilter(e.target.value)}
               className="bg-military-800 border border-military-700 text-white text-xs font-bold px-3 py-2 rounded-xl outline-none"
             >
-              <option value="ALL">Toutes les unités</option>
+              <option value="ALL">Toutes les équipes</option>
               {availableUnits.map((u) => (
                 <option key={u} value={u}>{u}</option>
               ))}
@@ -274,9 +274,9 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           <button
             onClick={() => setShowHandoverModal(true)}
             className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[11px] font-black uppercase flex items-center gap-1.5"
-            title="Transférer les droits Autorité vers le successeur (Postage numérique)"
+            title="Préparer la transmission des droits à un successeur"
           >
-            <span className="material-icons text-sm text-action-400">swap_horiz</span> Postage
+            <span className="material-icons text-sm text-action-400">swap_horiz</span> Passation
           </button>
         </div>
       </div>
@@ -295,7 +295,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-military-100 shadow-sm">
-          <div className="text-[10px] font-black uppercase text-gray-400">Taux Pratique APMS</div>
+          <div className="text-[10px] font-black uppercase text-gray-400">Pratique hebdomadaire</div>
           <div className="text-3xl font-black text-emerald-700 mt-1">{practiceRate}%</div>
           <span className="text-[10px] text-gray-400 font-semibold">≥ 2 séances / 7j</span>
         </div>
@@ -306,7 +306,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-military-100 shadow-sm col-span-2 lg:col-span-1">
-          <div className="text-[10px] font-black uppercase text-gray-400">Profils à accompagner</div>
+          <div className="text-[10px] font-black uppercase text-gray-400">Accompagnement à prévoir</div>
           <div className="text-3xl font-black text-red-600 mt-1">{inaptitudeCount}</div>
         </div>
       </div>

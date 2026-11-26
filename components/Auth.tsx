@@ -263,12 +263,15 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           <div className="bg-military-900 p-7 text-center pb-0">
             <img
               src="/icons/icon-192.png"
-              alt="SMART MONIT 1.0"
+              alt="SMART MONIT"
               className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-lg border border-action-500/40"
             />
-            <h1 className="text-2xl font-black text-white tracking-widest">SMART MONIT 1.0</h1>
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-2xl font-black text-white tracking-widest">SMART MONIT</h1>
+              <span className="rounded-full bg-action-500 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-military-950">Test</span>
+            </div>
             <p className="text-[11px] text-military-300 font-semibold uppercase tracking-widest mt-1 mb-4">
-              Coaching · entraînement · installations
+              Sport · coaching · espaces
             </p>
             <div className="mb-5">
               <InstallPWAButton variant="card" />

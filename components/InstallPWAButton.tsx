@@ -31,7 +31,7 @@ const InstallPWAButton: React.FC<InstallPWAButtonProps> = ({ variant = 'card' })
   if (pwa.isStandalone) {
     if (variant === 'banner' && pwa.updateAvailable) {
       return (
-        <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 bg-military-900 text-white p-3.5 rounded-2xl shadow-2xl border border-action-500/40 flex items-center justify-between gap-3 animate-[slideUp_0.25s]">
+        <div className="pwa-floating-banner pwa-update-banner fixed z-50 bg-military-900 text-white p-3.5 rounded-2xl shadow-2xl border border-action-500/40 flex items-center justify-between gap-3 animate-[slideUp_0.25s]">
           <div className="flex items-center gap-2.5">
             <span className="material-icons text-action-400">system_update</span>
             <div className="text-xs">
@@ -198,7 +198,7 @@ const InstallPWAButton: React.FC<InstallPWAButtonProps> = ({ variant = 'card' })
 
     return (
       <>
-        <div className="fixed bottom-20 md:bottom-4 left-3 right-3 md:left-auto md:right-4 md:max-w-sm z-40 bg-military-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-action-500/40 flex items-center justify-between gap-3 animate-[slideUp_0.3s] no-print">
+        <div className="pwa-floating-banner pwa-install-banner fixed z-40 bg-military-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-action-500/40 flex items-center justify-between gap-3 animate-[slideUp_0.3s] no-print">
           <div className="flex items-center gap-3 min-w-0">
             <img
               src="/icons/icon-192.png"
