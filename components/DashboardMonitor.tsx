@@ -9,7 +9,8 @@ import {
   ProgramStatus,
   InfrastructureType,
   ActiveSession,
-  MaintenanceTicket
+  MaintenanceTicket,
+  Session
 } from '../types';
 import { db, DEFAULT_LOCAL_RULES } from '../services/mockDatabase';
 import {
@@ -42,14 +43,16 @@ import FormulaSettingsModal from './program-builder/FormulaSettingsModal';
 import { exportProgramPrintPDF } from '../utils/programExport';
 import CalendarView from './CalendarView';
 import { useToast } from './ToastProvider';
+import CoachLaunchPanel from './CoachLaunchPanel';
 
 interface Props {
   user: UserProfile;
+  onLaunchCoachedSession: (session: Session, participant: UserProfile) => void;
 }
 
-type TabView = 'home' | 'users' | 'programs' | 'infras' | 'inventory' | 'registry' | 'agenda' | 'governance';
+type TabView = 'home' | 'coach' | 'users' | 'programs' | 'infras' | 'inventory' | 'registry' | 'agenda' | 'governance';
 
-const DashboardMonitor: React.FC<Props> = ({ user }) => {
+const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabView>('home');
   const [showBuilder, setShowBuilder] = useState(false);
@@ -348,7 +351,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
         });
       });
 
-    // Alertes santé / ORFA du jour
+    // Alerts related to the current wellness check-in.
     users.forEach((u) => {
       const daily = u.dailyForms.find((d) => d.date === today);
       if (daily) {
@@ -613,14 +616,14 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
     db.upsertService({
       id: baseId,
       code: getBaseCode(baseId),
-      name: currentService?.name || `Cellule EPMS — ${getBaseName(baseId)}`,
+      name: currentService?.name || `Équipe sportive — ${getBaseName(baseId)}`,
       monitorId: currentService?.monitorId || user.nid,
       emergencyPhone: currentService?.emergencyPhone,
       orfaContact: currentService?.orfaContact,
       localRules: localRulesDraft
     });
     setShowRulesEditor(false);
-    showToast('Règlement intérieur local mis à jour (soumis aux militaires au prochain bilan).', 'success');
+    showToast('Consignes locales mises à jour; elles seront présentées lors du prochain bilan.', 'success');
   };
 
   const ComplianceBadge = ({ days }: { days: number }) => {
@@ -660,10 +663,10 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
         <div>
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-military-500">
             <span className="material-icons text-base text-emerald-700" aria-hidden="true">monitoring</span>
-            Supervision EPMS
+            Gestion & coaching
           </div>
-          <h2 className="text-2xl md:text-3xl font-black text-military-900 mt-1">Console moniteur</h2>
-          <p className="text-sm text-military-500 mt-1">{getBaseName(user.serviceId)} · Vue opérationnelle</p>
+          <h2 className="text-2xl md:text-3xl font-black text-military-900 mt-1">Espace moniteur</h2>
+          <p className="text-sm text-military-500 mt-1">{getBaseName(user.serviceId)} · Coaching, cours et équipements</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-bold">
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800">
@@ -683,14 +686,15 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
       <div className="overflow-x-auto pb-1 no-scrollbar">
         <div className="flex gap-2 min-w-max" role="group" aria-label="Sections de l’espace moniteur">
           {[
-            { id: 'home', label: 'Vue Globale', icon: 'dashboard' },
-            { id: 'users', label: 'Militaires', icon: 'people' },
+            { id: 'home', label: 'Vue d’ensemble', icon: 'dashboard' },
+            { id: 'coach', label: 'Assistant coach', icon: 'auto_awesome' },
+            { id: 'users', label: 'Membres', icon: 'people' },
             { id: 'programs', label: 'Programmes', icon: 'model_training' },
             { id: 'infras', label: 'Installations', icon: 'stadium' },
             { id: 'inventory', label: 'Matériel', icon: 'fitness_center' },
-            { id: 'registry', label: 'Registre Sécurité', icon: 'verified_user' },
-            { id: 'agenda', label: 'Planning APMS', icon: 'calendar_today' },
-            { id: 'governance', label: 'IA & RGPD', icon: 'security' }
+            { id: 'registry', label: 'Suivi & sécurité', icon: 'verified_user' },
+            { id: 'agenda', label: 'Planning des cours', icon: 'calendar_today' },
+            { id: 'governance', label: 'IA & confidentialité', icon: 'security' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -712,13 +716,22 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
         </div>
       </div>
 
+      {activeTab === 'coach' && (
+        <CoachLaunchPanel
+          users={users.filter((member) => member.role === UserRole.USER)}
+          infrastructures={infras.filter((infrastructure) => infrastructure.status !== 'Closed')}
+          equipment={equipment}
+          onLaunch={onLaunchCoachedSession}
+        />
+      )}
+
       {/* --- VUE GLOBALE --- */}
       {activeTab === 'home' && (
         <div className="space-y-6">
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-military-100">
-              <div className="text-gray-400 text-[10px] font-black uppercase">Militaires ({getBaseCode(user.serviceId)})</div>
+              <div className="text-gray-400 text-[10px] font-black uppercase">Membres ({getBaseCode(user.serviceId)})</div>
               <div className="text-3xl font-black text-military-900 mt-1">
                 {users.filter((u) => u.role === UserRole.USER).length}
               </div>
@@ -830,7 +843,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-black text-sm text-military-900 uppercase flex items-center gap-2">
                 <span className="material-icons text-red-500 text-base animate-pulse">fiber_manual_record</span>
-                Monitoring Live — Présence en Salle & Parcours
+                Activité en cours
               </h3>
               <span className="bg-military-100 text-military-800 px-3 py-1 rounded-full text-xs font-black">
                 {activeSessions.length} actif(s)
@@ -838,7 +851,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
             </div>
             {activeSessions.length === 0 ? (
               <div className="text-center py-8 text-gray-400 text-sm italic">
-                Aucun militaire en séance déclarée actuellement.
+                Aucune séance en cours pour le moment.
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -883,7 +896,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
             <span className="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">search</span>
             <input
               type="text"
-              placeholder="Rechercher par NID, Nom ou Unité..."
+              placeholder="Rechercher par identifiant, nom ou équipe…"
               className="w-full pl-11 pr-4 py-3 bg-white border border-military-200 rounded-2xl font-bold text-sm outline-none focus:border-action-500"
               value={userSearchTerm}
               onChange={(e) => setUserSearchTerm(e.target.value)}
@@ -913,7 +926,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                         serviceId: user.serviceId,
                         action: 'VIEW_USER_PROFILE',
                         targetId: u.nid,
-                        details: `Consultation de la fiche EPMS individuelle de ${u.name} (NID ${u.nid}).`
+                        details: `Consultation de la fiche membre de ${u.name} (identifiant ${u.nid}).`
                       });
                       setSelectedUser(u);
                     }}
@@ -925,7 +938,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-black text-sm text-military-900 truncate">{u.name}</h4>
-                        <p className="text-[11px] text-gray-500 font-mono">NID {u.nid} • VMA {calculateVMA(u.tests)}</p>
+                        <p className="text-[11px] text-gray-500 font-mono">ID {u.nid} • VMA {calculateVMA(u.tests)}</p>
                         <p className="text-[10px] text-action-700 font-bold truncate mt-0.5">{u.unit || u.jobType}</p>
                       </div>
                     </div>
@@ -953,9 +966,9 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
               <button
                 onClick={() => setShowFormulaModal(true)}
                 className="px-3.5 py-2.5 bg-white border border-military-200 text-military-900 rounded-xl font-black uppercase text-xs flex items-center gap-1 hover:border-action-500"
-                title="Formules scientifiques 1RM / VMA et seuils PIA 7.1.1"
+                title="Paramètres des formules d'entraînement"
               >
-                <span className="material-icons text-sm text-action-600">functions</span> Formules PIA
+                <span className="material-icons text-sm text-action-600">functions</span> Formules d'entraînement
               </button>
               <button
                 onClick={() => {
@@ -1023,7 +1036,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                             : 'bg-emerald-100 text-emerald-800'
                         }`}
                       >
-                        {p.status === ProgramStatus.PENDING ? 'En attente' : p.isTemplate ? 'Modèle AAE' : 'Actif'}
+                        {p.status === ProgramStatus.PENDING ? 'En attente' : p.isTemplate ? 'Modèle partagé' : 'Actif'}
                       </span>
                       {p.assignedUnit && (
                         <span className="text-[9px] font-black bg-purple-100 text-purple-800 px-2 py-0.5 rounded uppercase">
@@ -1583,7 +1596,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                 <thead>
                   <tr className="bg-military-50 border-b border-gray-200 font-black uppercase text-military-700">
                     <th className="p-3.5">Horodatage</th>
-                    <th className="p-3.5">Acteur (NID)</th>
+                    <th className="p-3.5">Acteur (ID)</th>
                     <th className="p-3.5">Action</th>
                     <th className="p-3.5">Détails</th>
                   </tr>
@@ -1880,7 +1893,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                 type="button"
                 onClick={() =>
                   setQrAssetModal({
-                    name: editingInfra.name || 'Installation EPMS',
+                    name: editingInfra.name || 'Installation sportive',
                     subtitle: `${editingInfra.type} • ${getBaseName(user.serviceId)}`,
                     norm: editingInfra.normReference || getRegulatoryRuleForInfra(editingInfra.type).normCode,
                     lastVisual: editingInfra.lastVisualInspection,
@@ -2048,7 +2061,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
                 type="button"
                 onClick={() =>
                   setQrAssetModal({
-                    name: editingEquip.name || 'Équipement EPMS',
+                    name: editingEquip.name || 'Équipement sportif',
                     subtitle: `${editingEquip.category} • ${infras.find((i) => i.id === editingEquip.infrastructureId)?.name || 'Base'}`,
                     norm: editingEquip.normReference || getRegulatoryRuleForEquipment(editingEquip.category).normCode,
                     lastVisual: editingEquip.lastVisualInspection,
@@ -2123,7 +2136,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
               <div>
                 <h3 className="text-2xl font-black text-military-900 uppercase">{selectedUser.name}</h3>
                 <p className="text-xs font-mono text-gray-500">
-                  NID {selectedUser.nid} • {selectedUser.unit || 'Unité N/A'} • {selectedUser.jobType}
+                  ID {selectedUser.nid} • {selectedUser.unit || 'Équipe non renseignée'} • {selectedUser.jobType}
                 </p>
               </div>
               <button onClick={() => setSelectedUser(null)}><span className="material-icons">close</span></button>
@@ -2326,7 +2339,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
           >
             <div className="bg-military-900 text-white p-5 text-center">
               <span className="text-[9px] font-black uppercase tracking-widest bg-action-500 text-military-950 px-2.5 py-0.5 rounded-full">
-                Fiche Signalétique EPMS • {qrAssetModal.norm}
+                Fiche équipement • {qrAssetModal.norm}
               </span>
               <h3 className="text-lg font-black mt-2">{qrAssetModal.name}</h3>
               <p className="text-xs text-military-300">{qrAssetModal.subtitle}</p>
@@ -2378,7 +2391,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
               <button onClick={() => setShowRulesEditor(false)}><span className="material-icons">close</span></button>
             </div>
             <p className="text-xs text-gray-500">
-              Ce texte est soumis à acceptation obligatoire (case à cocher) à chaque militaire de votre site.
+              Ce texte est soumis à acceptation obligatoire (case à cocher) à chaque membre de votre structure.
             </p>
             <textarea
               value={localRulesDraft}
@@ -2401,7 +2414,7 @@ const DashboardMonitor: React.FC<Props> = ({ user }) => {
         isOpen={showFormulaModal}
         onClose={() => setShowFormulaModal(false)}
         user={user}
-        onSaved={() => showToast('Formules scientifiques et seuils PIA 7.1.1 enregistrés.', 'success')}
+        onSaved={() => showToast('Paramètres des formules enregistrés.', 'success')}
       />
     </div>
   );

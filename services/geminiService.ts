@@ -4,10 +4,13 @@ import {
   Infrastructure,
   ExerciseLibraryItem,
   Equipment,
-  AIProviderId
+  AIProviderId,
+  Session
 } from '../types';
 import { REGULATORY_RULES_DB } from '../utils/compliance';
 import { buildAnonymizedAIContext } from './ai/anonymizer';
+import { AlgorithmicProvider } from './ai/providers/algorithmicProvider';
+import { db } from './mockDatabase';
 import {
   resolveEffectiveProvider,
   getFallbackProvider,
@@ -109,6 +112,22 @@ export const suggestSessionModifications = async (
     console.warn(`[SmartMonit AI] Fallback local après échec ${provider.id}:`, err);
     return getFallbackProvider().suggestSessionModifications(req);
   }
+};
+
+export const suggestLocalCoachAdaptation = async (
+  session: Session,
+  user: UserProfile,
+  dailyForm: DailyForm,
+  availableEquipment: Equipment[]
+): Promise<any> => {
+  const provider = new AlgorithmicProvider();
+  return provider.suggestSessionModifications({
+    anonUser: buildAnonymizedAIContext(user),
+    dailyForm,
+    session,
+    availableEquipment,
+    exerciseLibrary: db.getExerciseLibrary()
+  });
 };
 
 export const parseTrainingFile = async (base64Data: string, mimeType: string): Promise<any> => {

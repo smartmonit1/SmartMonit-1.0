@@ -8,15 +8,12 @@ import {
   SessionAdaptationRequest
 } from '../types';
 
-/**
- * Implémentation Mistral AI — Prête pour l'accord-cadre Ministère des Armées / AMIAD (8 janvier 2026).
- * Compatible API Mistral Cloud (https://api.mistral.ai/v1) ET déploiement souverain on-premise AMIAD (endpoint OpenAI-compatible).
- */
+/** Fournisseur externe optionnel. Ne pas activer avec des données personnelles sans intégration serveur validée. */
 export class MistralProvider implements IAIProvider {
   readonly id = 'mistral' as const;
-  readonly label = 'Mistral AI — Livraison Finale (AMIAD)';
+  readonly label = 'Mistral AI — fournisseur externe';
   readonly sovereigntyNote =
-    'Pré-câblé en attente de la livraison finale post-tests (accord-cadre Ministère des Armées / AMIAD, hébergement souverain sans transfert hors UE).';
+    'Service externe optionnel. Cette démonstration ne fournit pas de passerelle serveur sécurisée pour les données personnelles.';
 
   private getApiKey(): string {
     return process.env.MISTRAL_API_KEY || '';
@@ -102,7 +99,7 @@ PROFIL BIOMÉTRIQUE ANONYMISÉ (RGPD):
 LIEU (${locationLabel}) & MATÉRIEL DISPONIBLE:
 ${equipmentList || 'AUCUN (Poids du corps uniquement)'}
 
-BIBLIOTHÈQUE EPMS:
+BIBLIOTHÈQUE D'EXERCICES:
 ${libraryList}
 
 Génère une séance "${sessionType}" de ${durationMinutes} minutes. Prescris TOUJOURS en % relatifs ("[75% 1RM]" ou "[85% VMA]").
@@ -129,7 +126,7 @@ Réponds STRICTEMENT en JSON avec cette structure exacte :
     const prompt = `
 PROFIL ANONYMISÉ: ${anonUser.jobType} (${anonUser.jobDirective}), VMA ${anonUser.vmaKmH} km/h, 1RM Haut ${anonUser.rmUpperKg} kg, 1RM Bas ${anonUser.rmLowerKg} kg.
 DEMANDE: Programme PPO de ${weeks} semaines, ${sessionsPerWeek} séances/semaine. Objectif: ${goal}. Lieux: ${allowedLocations.join(', ') || 'Base'}.
-Respecte PIA 7.1.1 (règle 3:1 deload semaine 4) et utilise [% 1RM] et [% VMA].
+Propose une progression individualisée et cohérente avec l'objectif, le niveau et la récupération. Les intensités chiffrées doivent reposer sur des références réellement renseignées.
 Réponds STRICTEMENT en JSON :
 {
   "programTitle": "string",
@@ -195,8 +192,8 @@ Retourne la séance adaptée STRICTEMENT en JSON :
       ? [
           {
             type: 'text',
-            text: `Extrais les créneaux de ce planning EPMS (dayOfWeek 1=Lundi..7=Dimanche, HH:MM) en JSON strict :
-{ "extractedSessions": [{ "title": "string", "dayOfWeek": 1, "timeStart": "08:30", "timeEnd": "09:45", "locationName": "string", "instructorName": "Staff EPMS" }] }`
+            text: `Extrais les créneaux de ce planning de cours (dayOfWeek 1=Lundi..7=Dimanche, HH:MM) en JSON strict :
+{ "extractedSessions": [{ "title": "string", "dayOfWeek": 1, "timeStart": "08:30", "timeEnd": "09:45", "locationName": "string", "instructorName": "Coach" }] }`
           },
           { type: 'image_url', image_url: `data:${mimeType};base64,${base64Data}` }
         ]
@@ -214,7 +211,7 @@ Retourne la séance adaptée STRICTEMENT en JSON :
       [
         {
           role: 'user',
-          content: `Expert réglementation installations sportives militaires (Code du Sport, PIA 7.1.1, AFNOR). Précise de façon concise (5 lignes max) les obligations pour ${itemName} (${itemType}). Base : ${localReference}`
+          content: `Aide à la recherche documentaire sur les installations sportives françaises. À partir uniquement des références fournies, résume les points à vérifier pour ${itemName} (${itemType}) : ${localReference}. N'affirme pas qu'une installation est conforme, n'invente aucune obligation ni référence et recommande de vérifier les textes en vigueur avec le responsable compétent.`
         }
       ],
       { model: this.getFastModel() }

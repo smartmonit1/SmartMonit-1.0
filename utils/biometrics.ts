@@ -219,16 +219,16 @@ export interface DailyFormAnalysis {
 }
 
 /**
- * Analyse structurée du bilan forme quotidien (incluant règle ORFA Section 4.9.3)
+ * Analyse structurée du bilan forme quotidien pour proposer des ajustements prudents.
  */
 export const analyzeDailyFormStructured = (daily: DailyForm): DailyFormAnalysis => {
   const instructions: string[] = [];
   const orfaRecommended =
     (daily.fatigueLevel > 6 && daily.stressLevel > 6) || daily.sleepQuality < 4;
 
-  // Zone Noire : Douleur aiguë
+  // Douleur élevée : ne pas proposer une séance intense.
   if (daily.painLevel >= 6) {
-    const msg = `ALERTE MÉDICALE : Douleur aiguë détectée (${daily.painLevel}/10${daily.painZone ? ` — ${daily.painZone}` : ''}). Séance intense suspendue. Consultez l'antenne médicale et prévenez le moniteur EPMS.`;
+    const msg = `Douleur importante rapportée (${daily.painLevel}/10${daily.painZone ? ` — ${daily.painZone}` : ''}). SmartMonit ne peut pas en évaluer la cause. Évitez les efforts intenses et demandez conseil à un professionnel de santé si la douleur est forte, inhabituelle ou persistante.`;
     return {
       zone: 'BLACK',
       intensityMultiplier: 0.5,
@@ -245,10 +245,10 @@ export const analyzeDailyFormStructured = (daily: DailyForm): DailyFormAnalysis 
     );
   }
 
-  // Zone Rouge : Fatigue extrême ou sommeil très dégradé
+  // Fatigue marquée ou sommeil très dégradé.
   if (daily.fatigueLevel >= 8 || daily.sleepQuality <= 3) {
     const msg =
-      'Zone Rouge : Fatigue importante ou sommeil très dégradé. Verrouillage des séances anaérobie lactique et force maximale. Privilégier récupération ORFA, mobilité ou cardio léger (< 65% VMA).';
+      'Fatigue importante ou sommeil très dégradé : privilégiez le repos ou une activité douce si elle reste confortable. Cette suggestion ne remplace pas un avis médical.';
     instructions.push(msg);
     return {
       zone: 'RED',
@@ -260,14 +260,14 @@ export const analyzeDailyFormStructured = (daily: DailyForm): DailyFormAnalysis 
     };
   }
 
-  // Zone Orange : Fatigue modérée, stress élevé ou sommeil moyen
+  // Fatigue modérée, stress élevé ou sommeil moyen.
   if (
     (daily.fatigueLevel >= 5 && daily.fatigueLevel <= 7) ||
     daily.sleepQuality < 6 ||
     daily.stressLevel > 6
   ) {
     const msg =
-      'Zone Orange : Baisse automatique d\'intensité de -15% (VMA / 1RM) et augmentation des temps de récupération active.';
+      'Vigilance récupération : une réduction de charge et des temps de repos supplémentaires sont proposés. Ajustez-les selon vos sensations.';
     instructions.push(msg);
     return {
       zone: 'ORANGE',
@@ -279,8 +279,8 @@ export const analyzeDailyFormStructured = (daily: DailyForm): DailyFormAnalysis 
     };
   }
 
-  // Zone Verte
-  const greenMsg = 'Zone Verte : Feu vert opérationnel — 100% de l\'intensité nominale.';
+  // Ressenti favorable.
+  const greenMsg = 'Ressenti favorable : la séance prévue peut être envisagée si l’échauffement et les sensations restent confortables.';
   instructions.push(greenMsg);
   return {
     zone: 'GREEN',

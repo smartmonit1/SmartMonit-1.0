@@ -1,6 +1,6 @@
-# SmartMonit — démonstrateur EPMS
+# SmartMonit — sport, coaching et installations
 
-SmartMonit regroupe les espaces pratiquant, moniteur et autorité autour de l’entraînement, des réservations, de la programmation et du suivi des installations.
+SmartMonit réunit trois espaces — utilisateur, moniteur et autorité — autour de l’entraînement, des réservations, du coaching et de la gestion des installations et du matériel.
 
 ## Démarrer en local
 
@@ -22,7 +22,11 @@ Les styles et polices sont compilés dans l’application. L’installation PWA 
 
 ## Périmètre actuel
 
-Cette version est destinée aux tests et démonstrations avec des données synthétiques uniquement. N’y saisissez pas de NID réel, de données de santé, de dossiers individuels ou d’informations opérationnelles.
+Cette version est destinée aux tests et démonstrations avec des données synthétiques uniquement. N’y saisissez pas d’identifiants réels, de données de santé, de dossiers individuels ou d’informations opérationnelles.
+
+Dans l’espace moniteur, l’onglet **Assistant coach** permet de choisir un membre, une séance, une installation et le matériel disponible. L’assistant local propose des adaptations à partir du bilan du jour et des substitutions documentées dans la bibliothèque d’exercices. Le moniteur doit vérifier et valider la proposition; l’outil ne pose pas de diagnostic et bloque le lancement si une douleur élevée est signalée ou si le matériel requis reste indisponible.
+
+La branche `smartmonit-v2-test` contient cette version d’essai. Pour revenir à la version précédente, utilisez `git switch main`. Pour reprendre les essais, utilisez `git switch smartmonit-v2-test`.
 
 La connexion de démonstration et les règles Firestore du prototype ne constituent pas une authentification ni une isolation de données adaptées à la production. Si les variables Firebase de `.env.local` sont configurées, les données peuvent être synchronisées avec le projet Firebase correspondant; ne connectez qu’un projet de test avec des données fictives.
 

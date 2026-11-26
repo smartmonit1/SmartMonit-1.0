@@ -10,11 +10,7 @@ const providers: Record<AIProviderId, IAIProvider> = {
   mistral: new MistralProvider()
 };
 
-/**
- * Architecture 100 % détachée de Google AI Studio (zéro coût, zéro dépendance cloud propriétaire) :
- * - Par défaut en phase de test multi-utilisateurs : Moteur Expert Local EPMS (`algorithmic`) — 0 €, hors-ligne, souverain.
- * - À la livraison finale post-tests : bascule directe vers Mistral AI / AMIAD (`AI_PROVIDER=mistral`).
- */
+/** Sélectionne le moteur local par défaut ou le fournisseur externe explicitement configuré. */
 export const getPreferredAIProvider = (): AIProviderId => {
   const stored = localStorage.getItem(PROVIDER_STORAGE_KEY) as string | null;
   if (stored && stored in providers) {

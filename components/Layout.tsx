@@ -66,14 +66,14 @@ const Layout: React.FC<LayoutProps> = ({
     effectiveRole === UserRole.MONITOR
       ? [
           { id: 'dashboard', icon: 'dashboard', label: 'Console' },
-          { id: 'library', icon: 'library_books', label: 'Biblio EPMS' },
+        { id: 'library', icon: 'library_books', label: 'Bibliothèque' },
           { id: 'calendar', icon: 'calendar_month', label: 'Planning' },
           { id: 'profile', icon: 'person', label: 'Profil' }
         ]
       : effectiveRole === UserRole.ADMINISTRATOR
       ? [
-          { id: 'dashboard', icon: 'analytics', label: 'Commandement' },
-          { id: 'calendar', icon: 'calendar_month', label: 'Planning Base' },
+        { id: 'dashboard', icon: 'analytics', label: 'Pilotage' },
+        { id: 'calendar', icon: 'calendar_month', label: 'Planning' },
           { id: 'profile', icon: 'person', label: 'Profil' }
         ]
       : [
@@ -89,10 +89,10 @@ const Layout: React.FC<LayoutProps> = ({
 
   const roleBadgeLabel =
     effectiveRole === UserRole.MONITOR
-      ? 'Moniteur EPMS'
+      ? 'Moniteur'
       : effectiveRole === UserRole.ADMINISTRATOR
       ? 'Autorité'
-      : 'Pratiquant';
+      : 'Utilisateur';
   const activeNavItem = navItems.find((item) => item.id === currentPage);
   const pageLabel =
     activeNavItem?.label ||
@@ -198,7 +198,7 @@ const Layout: React.FC<LayoutProps> = ({
                 Espace {roleBadgeLabel}
               </div>
               <div className="text-xs font-black text-military-900 truncate">{user.name}</div>
-              <div className="text-[10px] font-mono text-military-500">NID {user.nid}</div>
+              <div className="text-[10px] font-mono text-military-500">ID {user.nid}</div>
               {user.unit && <div className="text-[10px] text-action-700 font-bold truncate mt-0.5">{user.unit}</div>}
             </div>
 
@@ -228,9 +228,9 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
 
           <div className="p-3 rounded-xl bg-military-900 text-white text-[10px] space-y-1">
-            <div className="font-black uppercase tracking-widest text-action-400">Doctrine PPO</div>
+            <div className="font-black uppercase tracking-widest text-action-400">SmartMonit</div>
             <p className="text-military-200 leading-relaxed">
-              PIA 7.1.1 • Directive 17615 • Code du Sport. L’expertise humaine reste centrale.
+              Pratique, coaching et gestion des installations réunis. Les recommandations restent des aides à la décision.
             </p>
           </div>
         </aside>

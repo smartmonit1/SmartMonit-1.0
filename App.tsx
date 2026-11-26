@@ -36,6 +36,7 @@ const SmartMonitApp: React.FC = () => {
   // Session Live State
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [activeSessionType, setActiveSessionType] = useState<'FLASH' | 'PROGRAM' | 'COLLECTIVE' | 'FREE' | 'LIBRARY'>('FLASH');
+  const [activeSessionUser, setActiveSessionUser] = useState<UserProfile | null>(null);
 
   // Library navigation context
   const [libraryDefaultTab, setLibraryDefaultTab] = useState<'sessions' | 'programs' | 'global' | 'routes'>('global');
@@ -118,6 +119,7 @@ const SmartMonitApp: React.FC = () => {
     }
     setCurrentUser(null);
     setActiveSession(null);
+    setActiveSessionUser(null);
     localStorage.removeItem('sm_currentUser');
     setCurrentPage('dashboard');
   };
@@ -167,7 +169,7 @@ const SmartMonitApp: React.FC = () => {
       setEffectiveRole(currentUser.role);
       setCurrentPage('dashboard');
       showToast(
-        `Bascule vers votre espace ${currentUser.role === UserRole.MONITOR ? 'Moniteur EPMS' : 'Commandement'}.`,
+        `Bascule vers votre espace ${currentUser.role === UserRole.MONITOR ? 'Moniteur' : 'Autorité'}.`,
         'info'
       );
     } else {
@@ -182,7 +184,18 @@ const SmartMonitApp: React.FC = () => {
     type: 'FLASH' | 'PROGRAM' | 'COLLECTIVE' | 'FREE' | 'LIBRARY' = 'FLASH'
   ) => {
     setActiveSession(session);
+    setActiveSessionUser(null);
     setActiveSessionType(type);
+    setCurrentPage('live-session');
+  };
+
+  const handleLaunchCoachedSession = (session: Session, participant: UserProfile) => {
+    setActiveSession({
+      ...session,
+      description: `${session.description}${currentUser ? ` · Séance accompagnée par ${currentUser.name}` : ''}`
+    });
+    setActiveSessionUser(participant);
+    setActiveSessionType('FLASH');
     setCurrentPage('live-session');
   };
 
@@ -224,7 +237,7 @@ const SmartMonitApp: React.FC = () => {
         )}
 
         {currentPage === 'dashboard' && effectiveRole === UserRole.MONITOR && (
-          <DashboardMonitor user={currentUser} />
+          <DashboardMonitor user={currentUser} onLaunchCoachedSession={handleLaunchCoachedSession} />
         )}
 
         {currentPage === 'dashboard' && effectiveRole === UserRole.ADMINISTRATOR && (
@@ -265,7 +278,7 @@ const SmartMonitApp: React.FC = () => {
 
         {currentPage === 'live-session' && activeSession && (
           <LiveSession
-            user={currentUser}
+            user={activeSessionUser || currentUser}
             session={activeSession}
             sessionType={activeSessionType}
             onComplete={(completedSession, meta) => {
@@ -287,10 +300,10 @@ const SmartMonitApp: React.FC = () => {
               id: `log_${Date.now()}`,
               sessionId: completedSession.id,
               title: completedSession.title,
-              type: completedSession.workoutType || completedSession.type || 'EPMS',
+              type: completedSession.workoutType || completedSession.type || 'SPORT',
               date: nowIso,
               durationMinutes: meta.durationMinutes,
-              locationName: completedSession.locationName || 'Installation Base',
+              locationName: completedSession.locationName || 'Installation sportive',
               rpe: meta.rpe,
               notes: meta.notes || undefined,
               programId: completedSession.programId,
@@ -299,21 +312,38 @@ const SmartMonitApp: React.FC = () => {
               setsCompleted: meta.setsCompleted
             };
 
+            const sessionUser = activeSessionUser || currentUser;
             const updatedUser: UserProfile = {
-              ...currentUser,
-              completedSessions: [finishedSession, ...(currentUser.completedSessions || [])],
-              sessionLogs: [log, ...(currentUser.sessionLogs || [])]
+              ...sessionUser,
+              completedSessions: [finishedSession, ...(sessionUser.completedSessions || [])],
+              sessionLogs: [log, ...(sessionUser.sessionLogs || [])]
             };
 
-            handleUpdateUser(updatedUser);
+            const wasCoachLed = Boolean(activeSessionUser);
+            if (wasCoachLed && activeSessionUser) {
+              const existingParticipant = db.getUsers().find((item) => item.nid === activeSessionUser.nid);
+              db.updateUser({
+                ...updatedUser,
+                passwordHash: updatedUser.passwordHash || existingParticipant?.passwordHash
+              });
+            } else {
+              handleUpdateUser(updatedUser);
+            }
             setActiveSession(null);
-            setCurrentPage('tracking');
-            showToast('Séance clôturée ! Registre Sport Unité et suivi mis à jour.', 'success');
+            setActiveSessionUser(null);
+            setCurrentPage(wasCoachLed ? 'dashboard' : 'tracking');
+            showToast(
+              wasCoachLed
+                ? 'Séance clôturée. Le suivi du membre a été mis à jour.'
+                : 'Séance clôturée. Votre suivi a été mis à jour.',
+              'success'
+            );
             }}
             onCancel={() => {
               setActiveSession(null);
+              setActiveSessionUser(null);
               setCurrentPage('dashboard');
-              showToast('Séance interrompue et clôturée au Registre Sport.', 'info');
+              showToast('Séance interrompue et enregistrée dans le suivi.', 'info');
             }}
           />
         )}

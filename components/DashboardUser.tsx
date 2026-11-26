@@ -27,11 +27,11 @@ interface DashboardUserProps {
 }
 
 const PROGRAM_OBJECTIVES = [
-  'Préparation CCPM',
-  'Renforcement Musculaire',
-  'Amélioration Cardio (VMA)',
-  'Préparation Stage Commando',
-  'Prévention TMS / Posture Métier',
+  'Condition physique générale',
+  'Force et renforcement musculaire',
+  'Endurance et capacité cardiovasculaire',
+  'Mobilité et posture',
+  'Préparation à un événement sportif',
   'Remise en forme',
   'Perte de poids',
   'Réathlétisation',
@@ -363,7 +363,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
       targetRoles: ['MONITOR' as any]
     });
     setReqProgram(false);
-    showToast('Demande transmise à votre cellule EPMS.', 'success');
+    showToast('Demande transmise à votre coach.', 'success');
   };
 
   const handleLocationToggle = (loc: string) => {
@@ -383,13 +383,13 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
       title: `Séance Libre — ${flashLocation}`,
       type: 'LIBRE',
       workoutType: 'MUSCU',
-      description: `Entraînement autonome déclaré au Registre Sport Unité (${flashLocation}).`,
+      description: `Entraînement individuel à ${flashLocation}.`,
       durationMinutes: 0,
       locationName: flashLocation,
       isCompleted: false,
       content: {
         mainBlock: [{ exercise: 'Entraînement en autonomie', prescription: 'Chronomètre libre actif', rest: '-' }],
-        advice: 'Votre présence est enregistrée au Registre Sport Unité (Directive 17615).'
+        advice: 'Restez à l’écoute de vos sensations et adaptez votre effort si nécessaire.'
       }
     };
     onStartSession(session, 'FREE');
@@ -481,7 +481,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
         </div>
       )}
 
-      {/* Alerte ORFA dédiée (Section 4.9.3 : fatigue > 6 & stress > 6 ou sommeil < 4) */}
+      {/* Guidance récupération basée sur le bilan forme du jour */}
       {dailyAnalysis?.orfaRecommended && (
         <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">
@@ -490,11 +490,11 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
             </div>
             <div>
               <h4 className="font-black text-xs uppercase text-indigo-900 tracking-wider">
-                Accompagnement ORFA Recommandé
+                Récupération conseillée
               </h4>
               <p className="text-xs text-indigo-800 mt-0.5 leading-relaxed">
-                Votre bilan traduit une charge de stress/fatigue importante ou un sommeil réduit. Contactez un moniteur ORFA pour optimiser votre récupération :{' '}
-                <strong>{service?.orfaContact || 'Bureau EPMS / Référent ORFA de votre base'}</strong>.
+                Votre bilan indique une fatigue ou un sommeil dégradé. Échangez avec votre coach si vous souhaitez ajuster votre séance :{' '}
+                <strong>{service?.orfaContact || 'Votre coach ou référent sportif'}</strong>.
               </p>
             </div>
           </div>
@@ -502,7 +502,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
             onClick={() => onOpenLibrary('global')}
             className="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-black uppercase tracking-wider"
           >
-            Séance Mobilité / ORFA
+            Séance de récupération
           </button>
         </div>
       )}
@@ -586,7 +586,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
                           {cs.title}
                         </button>
                         {cs.category === 'CCPM' && (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-red-100 text-red-700">CCPM</span>
+                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-red-100 text-red-700">Test sportif</span>
                         )}
                         {cs.category === 'EVENEMENT' && (
                           <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-action-100 text-action-700">Événement</span>
@@ -655,7 +655,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
         <div className="flex justify-between items-center">
           <h3 className="font-black text-base uppercase flex items-center gap-2 text-military-900">
             <span className="material-icons text-military-600">assignment</span>
-            Mon Programme EPMS
+            Mon programme
           </h3>
           {activeProgram && (
             <button
@@ -740,7 +740,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
             <div>
               <span className="font-black text-amber-900 text-sm block">Demande en cours d'étude</span>
               <p className="text-xs text-amber-800 mt-0.5">
-                Objectif « {pendingProgram.goal} » ({pendingProgram.durationWeeks} sem) transmis à la cellule EPMS.
+                Objectif « {pendingProgram.goal} » ({pendingProgram.durationWeeks} sem) transmis à votre coach.
               </p>
             </div>
             <span className="material-icons text-amber-600 animate-pulse text-2xl">hourglass_empty</span>
@@ -825,7 +825,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
         )}
       </div>
 
-      {/* Sport Autonome (Générer / Rechercher / Séance libre -> Registre Sport Unité) */}
+      {/* Entraînement individuel */}
       <div className="bg-gradient-to-br from-military-800 to-military-950 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
           <span className="material-icons text-9xl">bolt</span>
@@ -838,7 +838,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
               Sport Autonome & Registre Sport
             </h3>
             <p className="text-military-300 text-xs">
-              Toute séance démarrée alimente automatiquement le Registre Sport Unité (statut « en service »).
+              Retrouvez vos séances réalisées dans votre historique personnel.
             </p>
           </div>
           <button
@@ -920,7 +920,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
                     <option value="Poids du corps">Poids du corps</option>
                     <option value="Course">Course / VMA</option>
                     <option value="Crosstraining">Cross-Training / WOD</option>
-                    <option value="Mobilité et posture">Mobilité & Posture (ORFA)</option>
+                    <option value="Mobilité et posture">Mobilité & posture</option>
                   </select>
                 </div>
                 <div>
@@ -966,7 +966,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
                   ? 'Adaptation en cours...'
                   : flashMode === 'generate'
                   ? 'Générer ma séance flash personnalisée'
-                  : 'Rechercher dans la bibliothèque EPMS'}
+                  : 'Rechercher dans la bibliothèque'}
               </button>
             </>
           )}
@@ -1120,7 +1120,7 @@ const DashboardUser: React.FC<DashboardUserProps> = ({
                 </span>
               </div>
               <p className="text-xs leading-relaxed">
-                {selectedCollSession.detailedDescription || 'Séance encadrée par la cellule EPMS.'}
+                {selectedCollSession.detailedDescription || 'Séance encadrée par un coach.'}
               </p>
               <div className="bg-military-50 p-4 rounded-2xl border border-military-100 text-xs font-bold text-military-800">
                 Inscrits : {selectedCollSession.participants.length} / {selectedCollSession.maxParticipants}

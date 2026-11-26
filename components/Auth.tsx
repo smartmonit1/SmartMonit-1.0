@@ -30,8 +30,8 @@ interface AuthProps {
 }
 
 const DEMO_ACCESS_CODES = {
-  [UserRole.MONITOR]: 'EPMS2026',
-  [UserRole.ADMINISTRATOR]: 'CMDT2026'
+  [UserRole.MONITOR]: 'COACH2026',
+  [UserRole.ADMINISTRATOR]: 'PILOTAGE2026'
 };
 
 const Auth: React.FC<AuthProps> = ({ onLogin }) => {
@@ -75,7 +75,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setError('');
     const cleanNid = nid.trim();
     if (!cleanNid) {
-      setError('Veuillez saisir votre NID.');
+      setError('Veuillez saisir votre identifiant.');
       return;
     }
 
@@ -151,14 +151,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const handlePasswordRecovery = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanNid = nid.trim();
-    // Message générique CNIL : ne pas révéler si un NID existe ou non
+    // Garder un message générique sans confirmer si un compte existe.
     if (!/^\d{10}$/.test(cleanNid)) {
-      setError('Veuillez saisir un NID valide à 10 chiffres.');
+      setError('Veuillez saisir un identifiant valide à 10 chiffres.');
       return;
     }
-    setSuccessMsg(
-      'Si ce NID est présent dans l\'annuaire Annudef, un lien de réinitialisation MinDef Connect a été transmis.'
-    );
+    setSuccessMsg('La réinitialisation n’est pas disponible dans cette démonstration. Contactez l’administrateur de test.');
     setError('');
   };
 
@@ -180,15 +178,15 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
     const cleanNid = (regData.nid || '').trim();
     if (!/^\d{10}$/.test(cleanNid)) {
-      setError('Le NID doit comporter exactement 10 chiffres.');
+      setError('L’identifiant doit comporter exactement 10 chiffres.');
       return;
     }
     if (cleanNid !== nidConfirm.trim()) {
-      setError('Les deux saisies du NID ne correspondent pas.');
+      setError('Les deux saisies de l’identifiant ne correspondent pas.');
       return;
     }
     if (db.getUsers().some((u) => u.nid === cleanNid)) {
-      setError('Un compte existe déjà avec ce NID. Utilisez la connexion.');
+      setError('Un compte existe déjà avec cet identifiant. Utilisez la connexion.');
       return;
     }
     if (!pwdValidation.valid) {
@@ -196,7 +194,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       return;
     }
     if (regData.role === UserRole.MONITOR && roleCode.trim().toUpperCase() !== DEMO_ACCESS_CODES[UserRole.MONITOR]) {
-      setError(`Code d'habilitation Moniteur EPMS requis (Démo : ${DEMO_ACCESS_CODES[UserRole.MONITOR]}).`);
+      setError(`Code d’accès Moniteur requis (Démo : ${DEMO_ACCESS_CODES[UserRole.MONITOR]}).`);
       return;
     }
     if (regData.role === UserRole.ADMINISTRATOR && roleCode.trim().toUpperCase() !== DEMO_ACCESS_CODES[UserRole.ADMINISTRATOR]) {
@@ -270,7 +268,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             />
             <h1 className="text-2xl font-black text-white tracking-widest">SMART MONIT 1.0</h1>
             <p className="text-[11px] text-military-300 font-semibold uppercase tracking-widest mt-1 mb-4">
-              Armée de l'Air et de l'Espace • EPMS
+              Coaching · entraînement · installations
             </p>
             <div className="mb-5">
               <InstallPWAButton variant="card" />
@@ -303,22 +301,22 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             </div>
             <p className="text-[11px] text-military-300 mt-3 mb-4" aria-live="polite">
               {loginRole === UserRole.MONITOR
-              ? 'Accès moniteur : activités, programmes et installations.'
+              ? 'Accès moniteur : coaching, programmes, cours et équipements.'
               : loginRole === UserRole.ADMINISTRATOR
-              ? 'Accès autorité : pilotage et indicateurs de votre périmètre.'
-              : 'Accès pratiquant : entraînement, agenda et suivi personnel.'}
+              ? 'Accès autorité : pilotage et indicateurs de votre structure.'
+              : 'Accès utilisateur : entraînement, réservations et suivi personnel.'}
             </p>
           </div>
 
           {isRecoveringPassword ? (
             <form onSubmit={handlePasswordRecovery} className="p-7 space-y-5">
               <div className="text-center text-xs font-black text-military-500 uppercase tracking-widest">
-                Récupération MinDef Connect
+                Récupération du mot de passe
               </div>
               {error && <div role="alert" className="text-red-700 text-center text-xs font-bold bg-red-50 border border-red-100 p-3 rounded-xl">{error}</div>}
               {successMsg && <div className="text-emerald-700 text-center text-xs font-bold bg-emerald-50 border border-emerald-100 p-3 rounded-xl">{successMsg}</div>}
               <div>
-                <label htmlFor="recovery-nid" className="block text-xs font-bold uppercase text-gray-500 mb-1">NID (10 chiffres)</label>
+                <label htmlFor="recovery-nid" className="block text-xs font-bold uppercase text-gray-500 mb-1">Identifiant (10 chiffres)</label>
                 <input
                   id="recovery-nid"
                   type="text"
@@ -349,13 +347,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           ) : (
             <form onSubmit={handleLogin} className="p-7 space-y-5">
               <div className="text-center text-xs font-black text-military-500 uppercase tracking-widest">
-                Connexion {loginRole === UserRole.MONITOR ? 'Moniteur EPMS' : loginRole === UserRole.ADMINISTRATOR ? 'Autorité / Commandement' : 'Militaire Pratiquant'}
+                Connexion {loginRole === UserRole.MONITOR ? 'Moniteur' : loginRole === UserRole.ADMINISTRATOR ? 'Autorité' : 'Utilisateur'}
               </div>
 
               {error && <div role="alert" className="text-red-700 text-center text-xs font-bold bg-red-50 border border-red-100 p-3 rounded-xl">{error}</div>}
 
               <div>
-                <label htmlFor="login-nid" className="block text-xs font-bold uppercase text-gray-500 mb-1">NID (Identifiant Défense)</label>
+                <label htmlFor="login-nid" className="block text-xs font-bold uppercase text-gray-500 mb-1">Identifiant du compte</label>
                 <input
                   id="login-nid"
                   type="text"
@@ -430,7 +428,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               </button>
             </div>
             <div className="text-[10px] font-black uppercase tracking-widest text-military-500 text-center">
-              Accès rapide démonstration (EAR 927)
+              Accès rapide aux profils de démonstration
             </div>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -439,8 +437,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 className="p-2.5 bg-white hover:bg-action-50 border border-military-200 hover:border-action-500 rounded-xl text-center transition-all"
               >
                 <span className="material-icons text-military-700 text-lg block">directions_run</span>
-                <span className="text-[10px] font-black text-military-900 block">Militaire</span>
-                <span className="text-[9px] text-gray-400 block truncate">SGT Martin</span>
+                <span className="text-[10px] font-black text-military-900 block">Utilisateur</span>
+                <span className="text-[9px] text-gray-400 block truncate">Profil de test</span>
               </button>
               <button
                 type="button"
@@ -449,16 +447,16 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               >
                 <span className="material-icons text-action-600 text-lg block">sports</span>
                 <span className="text-[10px] font-black text-military-900 block">Moniteur</span>
-                <span className="text-[9px] text-gray-400 block truncate">ADJ Barbotin</span>
+                <span className="text-[9px] text-gray-400 block truncate">Profil de test</span>
               </button>
               <button
                 type="button"
                 onClick={() => quickLogin('1122334455')}
                 className="p-2.5 bg-white hover:bg-action-50 border border-military-200 hover:border-action-500 rounded-xl text-center transition-all"
               >
-                <span className="material-icons text-airforce-700 text-lg block">military_tech</span>
+                <span className="material-icons text-airforce-700 text-lg block">admin_panel_settings</span>
                 <span className="text-[10px] font-black text-military-900 block">Autorité</span>
-                <span className="text-[9px] text-gray-400 block truncate">COL Rigollet</span>
+                <span className="text-[9px] text-gray-400 block truncate">Profil de test</span>
               </button>
             </div>
           </div>
@@ -477,7 +475,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         <div className="bg-white rounded-3xl shadow-xl max-w-lg w-full p-8 text-center animate-[fadeIn_0.3s] border border-military-100">
           <h2 className="text-2xl font-black text-military-900 mb-2 uppercase">Création de compte</h2>
           <p className="text-gray-500 text-sm mb-8">
-            Sélectionnez votre profil opérationnel. Un profil pratiquant personnel est automatiquement rattaché à tout compte.
+            Choisissez l’espace correspondant à votre rôle. Les accès moniteur et autorité incluent aussi un espace personnel.
           </p>
 
           <div className="grid gap-4">
@@ -490,8 +488,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   <span className="material-icons text-military-700 group-hover:text-white text-2xl">badge</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-military-900 uppercase">Militaire (Utilisateur)</h3>
-                  <p className="text-xs text-gray-500">Suivi individuel, programmes, séances flash, agenda & registre sport</p>
+                  <h3 className="font-black text-base text-military-900 uppercase">Utilisateur</h3>
+                  <p className="text-xs text-gray-500">Programmes, séances, réservations et suivi personnel</p>
                 </div>
               </div>
             </button>
@@ -505,8 +503,8 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   <span className="material-icons text-military-700 group-hover:text-white text-2xl">sports</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-military-900 uppercase">Moniteur EPMS</h3>
-                  <p className="text-xs text-gray-500">Gestion installations, sécurité réglementaire, coaching & personnalisation de masse</p>
+                  <h3 className="font-black text-base text-military-900 uppercase">Moniteur</h3>
+                  <p className="text-xs text-gray-500">Coaching, programmes, planning des cours, installations et matériel</p>
                 </div>
               </div>
             </button>
@@ -517,11 +515,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-military-100 rounded-xl flex items-center justify-center group-hover:bg-airforce-700 transition-colors">
-                  <span className="material-icons text-military-700 group-hover:text-white text-2xl">military_tech</span>
+                  <span className="material-icons text-military-700 group-hover:text-white text-2xl">admin_panel_settings</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-military-900 uppercase">Autorité / Commandement</h3>
-                  <p className="text-xs text-gray-500">Indicateurs agrégés anonymisés (k-anonymat CNIL) & Registre Sport Unité</p>
+                  <h3 className="font-black text-base text-military-900 uppercase">Autorité</h3>
+                  <p className="text-xs text-gray-500">Pilotage des structures et indicateurs agrégés et anonymisés</p>
                 </div>
               </div>
             </button>
@@ -546,7 +544,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full p-6 md:p-8 my-8 animate-[slideUp_0.3s] border border-military-100">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl md:text-2xl font-black text-military-900 uppercase">
-            Création — {regData.role === UserRole.ADMINISTRATOR ? 'Autorité' : regData.role === UserRole.MONITOR ? 'Moniteur EPMS' : 'Militaire'}
+            Création — {regData.role === UserRole.ADMINISTRATOR ? 'Autorité' : regData.role === UserRole.MONITOR ? 'Moniteur' : 'Utilisateur'}
           </h2>
           <span className="bg-military-900 text-action-400 text-[10px] font-black px-3 py-1 rounded-full uppercase">
             {regData.role}
@@ -578,28 +576,28 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 </div>
                 {regData.role === UserRole.MONITOR ? (
                   <div>
-                    <label className="block text-[11px] font-bold text-amber-800 mb-1">Niveau de droits EPMS</label>
+                    <label className="block text-[11px] font-bold text-amber-800 mb-1">Responsabilités du moniteur</label>
                     <select
                       className="w-full p-2.5 bg-white border border-amber-300 rounded-xl font-bold text-sm"
                       value={regData.monitorPermission || 'MONITEUR'}
                       onChange={(e) => setRegData({ ...regData, monitorPermission: e.target.value as MonitorPermission })}
                     >
-                      <option value="CHEF_CELLULE">Chef de Cellule EPMS (Tous droits)</option>
-                      <option value="RESP_MATERIEL">Responsable Matériel & Installations</option>
-                      <option value="MONITEUR">Moniteur EPMS (Coaching & Programmes)</option>
+                      <option value="CHEF_CELLULE">Gestion de l’équipe</option>
+                      <option value="RESP_MATERIEL">Gestion des installations et du matériel</option>
+                      <option value="MONITEUR">Coaching et programmes</option>
                     </select>
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-bold text-amber-800 mb-1">Échelon Commandement</label>
+                    <label className="block text-[11px] font-bold text-amber-800 mb-1">Périmètre de gestion</label>
                     <select
                       className="w-full p-2.5 bg-white border border-amber-300 rounded-xl font-bold text-sm"
                       value={regData.authorityScope || 'UNIT'}
                       onChange={(e) => setRegData({ ...regData, authorityScope: e.target.value as AuthorityScope })}
                     >
-                      <option value="UNIT">Commandant d'Unité (CDU)</option>
-                      <option value="BASE">Commandant de Base / Adjoint</option>
-                      <option value="AAE">Échelon National AAE / DRHAAE</option>
+                      <option value="UNIT">Équipe</option>
+                      <option value="BASE">Structure</option>
+                      <option value="AAE">Toutes les structures</option>
                     </select>
                   </div>
                 )}
@@ -610,7 +608,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           {/* Identité & Mot de passe CNIL */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-500 mb-1">NID (10 chiffres) *</label>
+              <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Identifiant (10 chiffres) *</label>
               <input
                 required
                 type="text"
@@ -621,7 +619,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Confirmer NID *</label>
+              <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Confirmer l’identifiant *</label>
               <input
                 required
                 type="text"
@@ -738,10 +736,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           {/* Tests Physiques */}
           <div>
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-black text-xs uppercase text-military-900">Tests Physiques & CCPM</h3>
+              <h3 className="font-black text-xs uppercase text-military-900">Tests de condition physique</h3>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-600 cursor-pointer bg-gray-100 px-3 py-1.5 rounded-xl">
                 <input type="checkbox" checked={ccpmInaptitude} onChange={(e) => setCcpmInaptitude(e.target.checked)} />
-                Inaptitude CCPM
+                Résultat à réévaluer
               </label>
             </div>
             {!ccpmInaptitude && (
@@ -755,7 +753,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     <option value="lucLeger">Luc Léger (Palier)</option>
                     <option value="vameval">VAMEVAL (Palier)</option>
                     <option value="cooper">Demi-Cooper (6 min — Mètres)</option>
-                    <option value="2400m">2400m CCPM (MM:SS)</option>
+                    <option value="2400m">Course 2400 m (MM:SS)</option>
                     <option value="10km">10 km (HH:MM:SS)</option>
                   </select>
                   {selectedTestType === 'lucLeger' && (
@@ -847,7 +845,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <label className="flex items-start gap-2.5 cursor-pointer text-xs text-military-700">
               <input type="checkbox" checked={consentAI} onChange={(e) => setConsentAI(e.target.checked)} className="mt-0.5 w-4 h-4 accent-military-900" />
               <span>
-                <strong>(Optionnel — Art. 21)</strong> J'autorise l'assistance IA générative sur données pseudonymisées (sans NID/nom). Si décoché, le moteur algorithmique 100 % local sera utilisé.
+                <strong>(Optionnel — Art. 21)</strong> J'autorise l'assistance IA générative sur données pseudonymisées (sans identifiant ni nom). Si décoché, le moteur algorithmique local sera utilisé.
               </span>
             </label>
 

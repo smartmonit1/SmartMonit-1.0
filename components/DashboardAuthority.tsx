@@ -158,9 +158,9 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
     const bom = '\uFEFF';
     const rows = [
       '"REGISTRE SPORT UNITE NUMERIQUE (Directive 17615 — Statut En Service)"',
-      `"Périmètre";"${scope === 'AAE' ? 'National AAE' : getBaseName(user.serviceId)}";"Extrait le";"${new Date().toLocaleString('fr-FR')}"`,
+      `"Périmètre";"${scope === 'AAE' ? 'Toutes les structures' : getBaseName(user.serviceId)}";"Extrait le";"${new Date().toLocaleString('fr-FR')}"`,
       '',
-      '"Statut";"Début";"Fin";"Durée (min)";"NID";"Militaire";"Unité";"Lieu / Parcours";"Type"'
+      '"Statut";"Début";"Fin";"Durée (min)";"Identifiant";"Membre";"Équipe";"Lieu";"Type"'
     ];
     registry.forEach((r) => {
       rows.push(
@@ -201,7 +201,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
       serviceId: user.serviceId,
       action: 'AUTHORITY_HANDOVER',
       targetId: targetHandoverNid.trim(),
-      details: `Transfert par postage numérique des droits Autorité vers le NID ${targetHandoverNid.trim()}.`
+      details: `Transfert des droits Autorité vers l’identifiant ${targetHandoverNid.trim()}.`
     });
     showToast(res.message, 'success');
     setShowHandoverModal(false);
@@ -218,17 +218,17 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
 
   return (
     <div className="space-y-6 animate-[fadeIn_0.3s]">
-      {/* En-tête Commandement & Sélecteur d'échelon */}
+      {/* En-tête de pilotage et sélecteur de périmètre */}
       <div className="command-dashboard-hero bg-military-900 text-white rounded-3xl p-6 shadow-lg flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <span className="text-[10px] font-black uppercase tracking-widest text-action-400">
-            Interface Commandement • Données Agrégées & Anonymisées
+            Espace autorité • Données agrégées et anonymisées
           </span>
           <h2 className="text-2xl font-black uppercase mt-1">
-            Pilotage EPMS — {scope === 'AAE' ? 'National AAE' : getBaseName(user.serviceId)}
+            Pilotage — {scope === 'AAE' ? 'Toutes les structures' : getBaseName(user.serviceId)}
           </h2>
           <p className="text-xs text-military-300 mt-1">
-            Indicateurs collectifs conformes RGPD + Registre Sport Unité en temps réel (Directive 17615).
+            Indicateurs collectifs anonymisés et suivi des activités de la structure.
           </p>
         </div>
 
@@ -238,7 +238,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
               [
                 { id: 'UNIT', label: 'Unité' },
                 { id: 'BASE', label: 'Base' },
-                { id: 'AAE', label: 'National AAE' }
+                { id: 'AAE', label: 'Toutes les structures' }
               ] as { id: AuthorityScope; label: string }[]
             ).map((sc) => (
               <button
@@ -306,12 +306,12 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-military-100 shadow-sm col-span-2 lg:col-span-1">
-          <div className="text-[10px] font-black uppercase text-gray-400">Inaptitudes CCPM</div>
+          <div className="text-[10px] font-black uppercase text-gray-400">Profils à accompagner</div>
           <div className="text-3xl font-black text-red-600 mt-1">{inaptitudeCount}</div>
         </div>
       </div>
 
-      {/* Bilan Forme Collectif & Alerte ORFA (Protection K-Anonymat CNIL >= 5) */}
+      {/* Indicateurs collectifs masqués si le groupe est trop petit. */}
       <div className="bg-white rounded-3xl p-6 border border-military-100 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <h3 className="text-sm font-black text-military-900 uppercase flex items-center gap-2">
@@ -320,7 +320,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           </h3>
           {collectiveWellness.kAnonymityMet && collectiveWellness.orfaAlert && (
             <span className="bg-indigo-100 text-indigo-900 px-3 py-1 rounded-full text-[10px] font-black uppercase">
-              Alerte ORFA Collective : Charge mentale élevée
+              Tendance collective : fatigue ou récupération à surveiller
             </span>
           )}
         </div>
@@ -329,7 +329,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
             <span className="material-icons text-emerald-700 text-xl shrink-0">shield</span>
             <div className="text-xs text-military-800 leading-relaxed">
               <strong className="uppercase block mb-0.5">Protection CNIL — Seuil de k-anonymat ({CNIL_K_ANONYMITY_THRESHOLD} personnes minimum)</strong>
-              Ce périmètre compte actuellement <strong>{collectiveWellness.count}</strong> bilan(s) forme consentant(s). Par respect strict du RGPD (prévention de toute ré-identification indirecte), les moyennes collectives de sommeil, fatigue et stress ne sont affichées qu'à partir de {CNIL_K_ANONYMITY_THRESHOLD} militaires. Basculez sur l'échelon supérieur (Base ou National AAE) si nécessaire.
+              Ce périmètre compte actuellement <strong>{collectiveWellness.count}</strong> bilan(s) forme consentant(s). Par précaution contre la ré-identification, les moyennes collectives de sommeil, fatigue et stress ne sont affichées qu'à partir de {CNIL_K_ANONYMITY_THRESHOLD} personnes. Élargissez le périmètre si nécessaire.
             </div>
           </div>
         ) : (
@@ -473,7 +473,7 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100 font-black uppercase text-gray-500">
-                <th className="p-3.5">Militaire (NID)</th>
+                <th className="p-3.5">Membre</th>
                 <th className="p-3.5">Unité</th>
                 <th className="p-3.5">Lieu / Parcours</th>
                 <th className="p-3.5">Début</th>
@@ -530,10 +530,10 @@ const DashboardAuthority: React.FC<DashboardAuthorityProps> = ({ user, onUserUpd
           >
             <h3 className="text-lg font-black uppercase text-military-900">Postage Numérique Autorité</h3>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Conformément à l'architecture de sécurité SMART MONIT, saisissez le <strong>NID du successeur montant</strong>. Ses droits Autorité seront activés et vos droits Autorité actuels seront automatiquement révoqués (passage en compte Utilisateur).
+              Saisissez l’identifiant du prochain responsable. Ses droits Autorité seront activés et vos droits actuels automatiquement révoqués.
             </p>
             <div>
-              <label className="text-[10px] font-black uppercase text-gray-500 block mb-1">NID du successeur (10 chiffres)</label>
+              <label className="text-[10px] font-black uppercase text-gray-500 block mb-1">Identifiant du prochain responsable (10 chiffres)</label>
               <input
                 required
                 maxLength={10}

@@ -1,4 +1,4 @@
-import { JobType, WorkSchedule } from '../../../types';
+import { Equipment, ExerciseLibraryItem, JobType, WorkSchedule } from '../../../types';
 import { analyzeDailyFormStructured, JOB_PROFILES_DB } from '../../../utils/biometrics';
 import {
   IAIProvider,
@@ -12,6 +12,32 @@ const normalizeText = (s: string) =>
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+
+const equipmentMatches = (requirement: string, equipment: Equipment[]): boolean => {
+  const normalizedRequirement = normalizeText(requirement);
+  if (!normalizedRequirement || /(aucun|aucune|poids du corps|bodyweight|sans materiel|sol libre)/.test(normalizedRequirement)) {
+    return true;
+  }
+  const requirements = normalizedRequirement.split(/[,/+]| et /).map((part) => part.trim()).filter(Boolean);
+  return requirements.every((part) =>
+    equipment.some((item) => {
+      const name = normalizeText(item.name);
+      return name.includes(part) || part.includes(name);
+    })
+  );
+};
+
+const findExercise = (
+  exerciseName: string,
+  library: ExerciseLibraryItem[]
+): ExerciseLibraryItem | undefined => {
+  const name = normalizeText(exerciseName);
+  return library.find((item) => normalizeText(item.name) === name) ||
+    library.find((item) => {
+      const candidate = normalizeText(item.name);
+      return candidate.length >= 5 && name.length >= 5 && (candidate.includes(name) || name.includes(candidate));
+    });
+};
 
 /**
  * Filtre les exercices contre-indiqués en fonction de la zone douloureuse déclarée.
@@ -40,7 +66,7 @@ const isExerciseContraindicated = (exerciseName: string, painZone?: string): boo
 };
 
 /**
- * Exercices correctifs ciblés selon la zone sensible déclarée (approche préventive EPMS / ORFA).
+ * Variantes de mobilité ciblées à partir de la zone sensible déclarée.
  */
 const getPainCorrectiveExercise = (painZone?: string) => {
   const pain = normalizeText(painZone || '');
@@ -99,14 +125,13 @@ const tryDecodeBase64Text = (base64Data: string, mimeType: string): string | nul
 };
 
 /**
- * Moteur Expert Local EPMS — 100 % autonome, 0 € de frais API, hors-ligne et souverain.
- * Conçu pour supporter des centaines de testeurs simultanés sur tous smartphones sans aucune dépendance cloud payante.
+ * Assistant algorithmique local, disponible hors ligne sans transmettre de données personnelles.
  */
 export class AlgorithmicProvider implements IAIProvider {
   readonly id = 'algorithmic' as const;
-  readonly label = 'Moteur Expert Local EPMS (0 € — Autonome & Hors-ligne)';
+  readonly label = 'Assistant local SmartMonit';
   readonly sovereigntyNote =
-    'Traitement 100 % local sur le smartphone/navigateur (doctrine PIA 7.1.1 / ORFA) : 0 € de coût API même pour des centaines de testeurs, aucune fuite de données, fonctionne hors-ligne.';
+    'Propositions calculées localement dans le navigateur, sans appel à un service IA externe.';
 
   isConfigured(): boolean {
     return true;
@@ -164,16 +189,14 @@ export class AlgorithmicProvider implements IAIProvider {
         });
       }
       return {
-        title: `Récupération Active & Mobilité ORFA (${durationMinutes} min)`,
-        description: `Séance automatiquement protégée suite à votre bilan du jour (${
-          analysis.zone === 'BLACK' ? 'alerte douleur aiguë' : 'fatigue / sommeil dégradé'
-        }).`,
+        title: `Récupération active & mobilité (${durationMinutes} min)`,
+        description: 'Proposition de récupération à revoir avec votre coach selon votre ressenti.',
         equipmentNeeded: ['Tapis de sol'],
-        warmup: '5 min de cohérence cardiaque (5s inspiration / 5s expiration) et déverrouillage articulaire doux.',
+        warmup: '5 min de respiration calme et de mobilité articulaire confortable.',
         mainBlock: blocks,
-        cooldown: '5 min de relaxation guidée (protocole ORFA TOP) et hydratation.',
+        cooldown: '5 min de retour au calme et hydratation.',
         advice: `${analysis.summary}${
-          analysis.orfaRecommended ? ' Recommandation ORFA : sollicitez un moniteur ORFA avant reprise intensive.' : ''
+          analysis.orfaRecommended ? ' Si la fatigue persiste, privilégiez la récupération et échangez avec votre coach.' : ''
         }`
       };
     }
@@ -262,11 +285,11 @@ export class AlgorithmicProvider implements IAIProvider {
       };
     }
 
-    // 4. MOBILITÉ / POSTURE / ORFA
+    // 4. Mobilité et posture
     if (typeLower.includes('mobilit') || typeLower.includes('posture') || typeLower.includes('recup') || typeLower.includes('orfa')) {
       return {
-        title: `Mobilité & Prévention Métier (${durationMinutes} min)`,
-        description: `Protocole postural PIA 7.1.1 ciblé pour ${anonUser.jobType}.`,
+        title: `Mobilité & posture (${durationMinutes} min)`,
+        description: `Proposition adaptée au profil renseigné (${anonUser.jobType}).`,
         equipmentNeeded: ['Tapis de sol'],
         warmup: '5 min respiration diaphragmatique + déverrouillage cervical, scapulaire et coxo-fémoral.',
         mainBlock: [
@@ -292,7 +315,7 @@ export class AlgorithmicProvider implements IAIProvider {
         { exercise: 'Face Pull Poulie Haute (Prévention Épaules)', prescription: '3 séries x 15 reps', tempo: '2-2-2-0', rest: '1:00' }
       ];
 
-      // Complète avec la bibliothèque EPMS locale si pertinente
+      // Complète avec la bibliothèque locale si elle contient des exercices pertinents
       const libMuscu = exerciseLibrary
         .filter((e) => normalizeText(e.type).includes('muscu') || normalizeText(e.type).includes('renfo'))
         .filter((e) => !isExerciseContraindicated(e.name, dailyForm.painZone))
@@ -312,8 +335,8 @@ export class AlgorithmicProvider implements IAIProvider {
       }
 
       return {
-        title: `Renforcement Force PPO — ${locationLabel} (${durationMinutes} min)`,
-        description: `Séance musculation PIA 7.1.1 calibrée sur vos 1RM (Haut ${anonUser.rmUpperKg} kg / Bas ${anonUser.rmLowerKg} kg) et profil ${anonUser.jobType}.`,
+        title: `Renforcement musculaire — ${locationLabel} (${durationMinutes} min)`,
+        description: `Proposition construite à partir des références de force renseignées et du profil ${anonUser.jobType}.`,
         equipmentNeeded: availableEquipment.slice(0, 4).map((e) => e.name),
         warmup: '8 min cardio léger + mobilité épaules/hanches + 2 séries de chauffe progressives.',
         mainBlock: finalBlock,
@@ -322,10 +345,10 @@ export class AlgorithmicProvider implements IAIProvider {
       };
     }
 
-    // 6. CROSS-TRAINING / HIIT / CCPM / POIDS DU CORPS
+    // 6. Entraînement fonctionnel et poids du corps
     const circuitCandidates = [
       { exercise: 'Air Squats Contrôlés', prescription: `${setsCount} séries x 18 reps`, tempo: '2-1-1-0', rest: '0:45' },
-      { exercise: 'Pompes Classiques (Standard CCPM)', prescription: `${setsCount} séries x 12-15 reps`, tempo: '2-0-1-0', rest: '1:00' },
+      { exercise: 'Pompes classiques', prescription: `${setsCount} séries x 12-15 reps`, tempo: '2-0-1-0', rest: '1:00' },
       { exercise: 'Fentes Alternées Dynamiques', prescription: `${setsCount} séries x 10 reps / jambe`, tempo: 'Contrôlé', rest: '0:45' },
       { exercise: 'Tirage Inversé / Rowing Élastique', prescription: `${setsCount} séries x 12 reps`, tempo: '2-1-2-0', rest: '0:45' },
       { exercise: 'Gainage Planche & Superman', prescription: `${setsCount} x (40s Planche + 30s Superman)`, tempo: 'Isométrique', rest: '1:00' },
@@ -340,7 +363,7 @@ export class AlgorithmicProvider implements IAIProvider {
 
     return {
       title: `Circuit Opérationnel ${sessionType} — ${locationLabel} (${durationMinutes} min)`,
-      description: `Entraînement fonctionnel PPO calibré pour ${anonUser.jobType}.`,
+      description: `Entraînement fonctionnel adapté au profil renseigné (${anonUser.jobType}).`,
       equipmentNeeded: ['Poids du corps', 'Tapis de sol'],
       warmup: '6 min mobilité articulaire complète + 2 tours d\'activation progressive.',
       mainBlock: safeCircuit,
@@ -383,7 +406,7 @@ export class AlgorithmicProvider implements IAIProvider {
           type: isCardio ? 'CARDIO' : 'MUSCU',
           locationName: allowedLocations[(d - 1) % Math.max(1, allowedLocations.length)] || locDefault,
           description: `${
-            isDeload ? 'Semaine de décharge réglementaire PIA 7.1.1 (-40% volume).' : 'Montée en charge progressive PIA 7.1.1.'
+            isDeload ? 'Semaine de récupération prévue dans le cycle; ajustez-la selon la réponse à l’entraînement.' : 'Progression proposée, à ajuster selon la récupération et les progrès observés.'
           } Objectif : ${goal}.`,
           durationMinutes: isDeload ? 35 : 45,
           content: {
@@ -414,34 +437,82 @@ export class AlgorithmicProvider implements IAIProvider {
                   { exercise: 'Gainage Planche & Transverse', prescription: '3 x 50 sec', tempo: 'Isométrique', rest: '0:45' }
                 ],
             cooldown: '5 min retour au calme, hydratation et étirements doux.',
-            advice: JOB_PROFILES_DB[anonUser.jobType]?.constraints[0].solution || 'Respectez la progressivité PIA 7.1.1.'
+            advice: JOB_PROFILES_DB[anonUser.jobType]?.constraints[0].solution || 'Privilégiez une progression graduelle et une technique maîtrisée.'
           }
         });
       }
     }
-    return { programTitle: `Programme ${goal} (${weeks} sem — PIA 7.1.1)`, sessions };
+    return { programTitle: `Programme ${goal} (${weeks} semaines)`, sessions };
   }
 
   async suggestSessionModifications(req: SessionAdaptationRequest): Promise<any> {
-    const { anonUser, dailyForm, session } = req;
+    const {
+      anonUser,
+      dailyForm,
+      session,
+      availableEquipment = [],
+      exerciseLibrary = []
+    } = req;
     const analysis = analyzeDailyFormStructured(dailyForm);
     if (analysis.zone === 'BLACK' || analysis.zone === 'RED') {
-      return this.generateFlashSession({
+      const recoverySession = await this.generateFlashSession({
         anonUser,
         dailyForm,
         locationLabel: session.locationName || 'Base',
         sessionType: 'Mobilité',
         durationMinutes: 25,
-        exerciseLibrary: [],
-        availableEquipment: []
+        exerciseLibrary,
+        availableEquipment
       });
+      return {
+        ...recoverySession,
+        adaptationNotes: [
+          'La charge a été remplacée par une proposition de récupération à valider avec le pratiquant.',
+          ...(analysis.zone === 'BLACK'
+            ? ['Une douleur élevée a été signalée : ne pas poursuivre l’activité en cas de douleur et demander un avis professionnel de santé.']
+            : [])
+        ]
+      };
     }
 
     const existingMain = session.content?.mainBlock || [];
+    const adaptationNotes: string[] = [];
     const adaptedMain = existingMain.map((b: any) => {
       if (isExerciseContraindicated(b.exercise || '', dailyForm.painZone)) {
+        adaptationNotes.push(`${b.exercise} remplacé en raison de la zone sensible déclarée.`);
         return getPainCorrectiveExercise(dailyForm.painZone);
       }
+
+      const exercise = findExercise(b.exercise || '', exerciseLibrary);
+      if (exercise?.equipment && !equipmentMatches(exercise.equipment, availableEquipment)) {
+        const substitutions = exercise.substitutes || [];
+        const substitute = exerciseLibrary.find((candidate) => {
+          const namedSubstitute = substitutions.some(
+            (name) =>
+              normalizeText(name) === normalizeText(candidate.name) ||
+              normalizeText(name) === normalizeText(candidate.id)
+          );
+          const similarMovement =
+            Boolean(exercise.movementPattern) &&
+            candidate.movementPattern === exercise.movementPattern;
+          return (
+            candidate.id !== exercise.id &&
+            (namedSubstitute || similarMovement) &&
+            equipmentMatches(candidate.equipment, availableEquipment) &&
+            !isExerciseContraindicated(candidate.name, dailyForm.painZone)
+          );
+        });
+
+        if (substitute) {
+          adaptationNotes.push(`${b.exercise} remplacé par ${substitute.name} : ${exercise.equipment} non disponible.`);
+          return { ...b, exercise: substitute.name };
+        }
+
+        adaptationNotes.push(
+          `${b.exercise} nécessite du matériel non disponible (${exercise.equipment}) : choisir une variante avant le lancement.`
+        );
+      }
+
       let prescription = b.prescription || '';
       if (analysis.zone === 'ORANGE') {
         // Réduction douce de -10% sur les pourcentages prescrits
@@ -456,19 +527,27 @@ export class AlgorithmicProvider implements IAIProvider {
         rest: analysis.zone === 'ORANGE' ? `${b.rest || '1:30'} (+30s récup)` : b.rest
       };
     });
+    const adaptedExercises = adaptedMain.map((block: any) =>
+      findExercise(block.exercise || '', exerciseLibrary)
+    );
+    const adaptedEquipmentNeeded = adaptedExercises.every(Boolean)
+      ? Array.from(new Set(adaptedExercises.map((item) => item?.equipment).filter(Boolean)))
+      : session.content?.equipmentNeeded || [];
 
     return {
       title: `${session.title} (Adaptée ${analysis.zone === 'GREEN' ? 'Nominale' : 'Vigilance Forme'})`,
       description: session.description,
-      equipmentNeeded: session.content?.equipmentNeeded || [],
+      equipmentNeeded: adaptedEquipmentNeeded,
       warmup: session.content?.warmup || '8 min échauffement articulaire progressif.',
       mainBlock: adaptedMain,
       cooldown: session.content?.cooldown || '5 min retour au calme.',
       advice: `${analysis.summary}${
         dailyForm.painZone
-          ? ` Zone signalée (${dailyForm.painZone}) : exercices sensibles automatiquement substitués.`
+          ? ` Zone signalée (${dailyForm.painZone}) : les propositions de substitution doivent être validées avant l’effort.`
           : ''
-      }`
+      }`,
+      adaptationNotes,
+      requiresCoachReview: true
     };
   }
 
@@ -501,7 +580,7 @@ export class AlgorithmicProvider implements IAIProvider {
       if (exercises.length > 0) {
         return {
           title: lines[0]?.slice(0, 60) || 'Programme Importé (Analyse Locale)',
-          goal: 'Développement PPO / CCPM',
+          goal: 'Préparation physique générale',
           sessions: [
             {
               dayNumber: 1,
@@ -517,7 +596,7 @@ export class AlgorithmicProvider implements IAIProvider {
 
     return {
       title: 'Programme Importé (Trame Locale Modifiable)',
-      goal: 'Développement PPO / CCPM',
+      goal: 'Préparation physique générale',
       sessions: [
         {
           dayNumber: 1,
@@ -569,12 +648,12 @@ export class AlgorithmicProvider implements IAIProvider {
             .replace(/[;|,]+/g, ' ')
             .trim();
           extracted.push({
-            title: titleClean || 'Séance Collective EPMS',
+            title: titleClean || 'Cours collectif',
             dayOfWeek: dayEntry[1],
             timeStart,
             timeEnd,
-            locationName: 'Installations EPMS',
-            instructorName: 'Staff EPMS'
+            locationName: 'Installation sportive',
+            instructorName: 'Coach'
           });
         }
       });
@@ -585,9 +664,9 @@ export class AlgorithmicProvider implements IAIProvider {
 
     return {
       extractedSessions: [
-        { title: 'Prépa CCPM — Course & Gainage (Trame Locale)', dayOfWeek: 1, timeStart: '09:00', timeEnd: '10:15', locationName: 'Piste Athlétisme', instructorName: 'Staff EPMS' },
-        { title: 'Cross-Training Opérationnel (Trame Locale)', dayOfWeek: 3, timeStart: '11:30', timeEnd: '12:30', locationName: 'Cage Cross-Training', instructorName: 'Staff EPMS' },
-        { title: 'Mobilité & Récupération ORFA (Trame Locale)', dayOfWeek: 5, timeStart: '10:00', timeEnd: '11:00', locationName: 'Dojo / Salle Combat', instructorName: 'Staff EPMS' }
+        { title: 'Course & renforcement (exemple)', dayOfWeek: 1, timeStart: '09:00', timeEnd: '10:15', locationName: 'Piste d’athlétisme', instructorName: 'Coach' },
+        { title: 'Entraînement fonctionnel (exemple)', dayOfWeek: 3, timeStart: '11:30', timeEnd: '12:30', locationName: 'Salle de sport', instructorName: 'Coach' },
+        { title: 'Mobilité & récupération (exemple)', dayOfWeek: 5, timeStart: '10:00', timeEnd: '11:00', locationName: 'Studio', instructorName: 'Coach' }
       ]
     };
   }
@@ -600,29 +679,29 @@ export class AlgorithmicProvider implements IAIProvider {
     const q = normalizeText(message);
 
     if (/(ccpm|luc leger|cooper|2400|pompe|gainage|bareme)/.test(q)) {
-      return `**Préparation CCPM (Doctrine PIA 7.1.1) :**\n• **Course (2400m / Luc Léger)** : alternez 1 séance de fractionné court (30/30 à 95-100% VMA) et 1 séance d'allure spécifique / seuil (80-85% VMA) par semaine.\n• **Pompes & Gainage** : privilégiez 3 séances courtes en séries propres (tempo 2-0-1-0) + gainage ventral/latéral 3x45s à 1 min.\n• **Règle d'or** : planifiez une semaine de décharge (-40% volume) 7 à 10 jours avant le test officiel.`;
+      return `**Préparer un test de condition physique :**\n• Choisissez des séances cohérentes avec les épreuves et votre niveau actuel.\n• Alternez les efforts exigeants avec des séances plus faciles et des temps de récupération suffisants.\n• Répétez les gestes du test sans aller systématiquement à l'échec; un coach peut ajuster le volume et l'allure à partir de vos résultats.\n• Les barèmes et modalités varient selon le test : consultez sa documentation officielle.`;
     }
 
     if (/(vma|allure|cardio|course|courir|fractionne)/.test(q)) {
-      return `**Calibrage VMA & Cardio :**\n• **Endurance fondamentale** : 65–70% VMA (aisance respiratoire, base du volume).\n• **Seuil aérobie** : 80–85% VMA (blocs de 6 à 12 min).\n• **Développement VMA** : 95–105% VMA sur efforts courts (30/30, 200m, 400m).\n• Renseignez votre dernier test (Luc Léger, Cooper ou 2400m) dans votre onglet **Profil** : SmartMonit convertit automatiquement tous les pourcentages en allures min/km !`;
+      return `**Construire une séance d’endurance :**\n• Utilisez un test récent et adapté pour estimer vos zones; ces estimations restent indicatives.\n• La majorité des sorties peut rester à une allure confortable où la conversation est possible.\n• Introduisez les intervalles progressivement, avec une récupération suffisante et une technique stable.\n• Si les sensations s’écartent nettement de l’allure prévue, adaptez ou interrompez la séance.`;
     }
 
     if (/(1rm|muscu|charge|poids|squat|developpe|force|hypertrophie)/.test(q)) {
-      return `**Prescription Musculation (% 1RM) :**\n• **Force max** : 85–92% 1RM (3 à 5 reps, 2'30–3' repos).\n• **Hypertrophie / Renforcement PPO** : 70–80% 1RM (8 à 12 reps, 1'30–2' repos).\n• **Endurance de force / Reprise** : 55–65% 1RM (12 à 15 reps, 1' repos).\n• Pensez à actualiser votre 1RM Haut & Bas dans **Profil** : l'application calcule vos charges exactes en kg (arrondies à 2,5 kg) dans chaque séance.`;
+      return `**Construire une séance de renforcement :**\n• Choisissez une charge qui permet de garder une exécution maîtrisée et une marge adaptée à votre niveau.\n• Ajustez progressivement répétitions, charge ou volume, sans augmenter toutes les variables à la fois.\n• Prévoyez des récupérations suffisantes; réduisez la charge si la technique se dégrade.\n• Les pourcentages estimés d’un maximum sont indicatifs et ne remplacent pas une évaluation encadrée.`;
     }
 
     if (/(douleur|mal|bless|genou|dos|lomb|epaule|cheville|tendin)/.test(q)) {
-      return `**Conduite à tenir en cas de douleur (Sécurité EPMS / ORFA) :**\n• **Douleur ≥ 7/10 ou aiguë** : arrêt immédiat de la charge, passage en **Zone Noire** (récupération/mobilité douce uniquement) et consultation à l'antenne médicale / moniteur ORFA.\n• **Douleur légère (4–6/10)** : déclarez précisément la zone dans votre **Bilan de forme quotidien** : SmartMonit filtre automatiquement les exercices sollicitant cette zone et propose des exercices correctifs.\n• Ne forcez jamais sur une douleur articulaire vive ou asymétrique.`;
+      return `**En cas de douleur :**\n• L’application ne peut pas évaluer une blessure ni poser un diagnostic.\n• Interrompez l’exercice en cas de douleur vive, inhabituelle ou qui s’aggrave; ne cherchez pas à la contourner pour poursuivre à tout prix.\n• Demandez conseil à un professionnel de santé avant de reprendre si la douleur persiste ou vous inquiète.`;
     }
 
     if (/(sommeil|fatigue|stress|nuit|3x8|garde|orfa|recup)/.test(q)) {
-      return `**Gestion Fatigue, Stress & Horaires Décalés (ORFA) :**\n• Après une garde ou un poste de nuit, baissez l'intensité de 15 à 25% et privilégiez la mobilité, l'endurance douce (60-65% VMA) et la **cohérence cardiaque (5s/5s pendant 5 min)**.\n• Un sommeil < 5/10 ou un stress > 7/10 déclenche automatiquement l'allègement de votre séance du jour dans SmartMonit.`;
+      return `**Adapter l’entraînement à la récupération :**\n• Tenez compte de la qualité du sommeil, de la fatigue et de votre ressenti avant la séance.\n• En cas de fatigue inhabituelle, choisissez une séance plus courte ou plus légère, ou prenez un jour de récupération.\n• Les curseurs de l’application aident à ouvrir la discussion; ils ne constituent pas une évaluation médicale.`;
     }
 
     if (/(reglement|afnor|norme|controle|registre|securite|materiel)/.test(q)) {
-      return `**Réglementation EPMS & Sécurité des Installations :**\n• **Buts & équipements sportifs (NF EN 748 / NF S52-409)** : contrôle visuel mensuel + test de stabilité réglementaire annuel.\n• **Musculation & Cardio (NF EN ISO 20957)** : contrôle visuel câbles/poulies/serrages hebdomadaire + révision annuelle.\n• **Registre Sport Unité (Directive 17615)** : toute séance lancée dans SmartMonit alimente automatiquement la traçabilité « en service ».`;
+      return `**Vérifier une exigence pour une installation :**\n• Les obligations dépendent du type d’équipement, de son usage, de l’établissement et des textes en vigueur.\n• Vérifiez les références à jour auprès des sources officielles et du responsable compétent.\n• Cette démonstration peut aider à organiser le suivi, mais ne certifie pas la conformité et ne remplace ni une inspection ni un avis juridique.`;
     }
 
-    return `**Assistant Expert EPMS (Mode Local Autonome — 0 €) :**\nVotre question a bien été reçue en mode 100 % souverain (aucune donnée transmise sur Internet). Je peux vous conseiller en détail sur :\n• **La préparation CCPM** (course, pompes, gainage, périodisation 3:1)\n• **Le calibrage VMA & 1RM** (zones d'intensité, charges, récupérations)\n• **La gestion des douleurs, fatigue et horaires 3x8 / ORFA**\n• **La réglementation AFNOR / Code du Sport** des installations.\n*Posez-moi une question précise sur l'un de ces thèmes ou sollicitez votre moniteur EPMS !*`;
+    return `**Assistant SmartMonit — mode local**\nJe peux aider à réfléchir à un objectif d’entraînement, une séance, la récupération, l’usage du matériel ou l’organisation des cours. Les réponses sont des suggestions générales : un coach doit les vérifier et elles ne remplacent pas un avis médical, technique ou juridique.`;
   }
 }
