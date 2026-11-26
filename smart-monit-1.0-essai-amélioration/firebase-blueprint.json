@@ -1,83 +1,66 @@
 {
-  "entities": {
-    "UserProfile": {
-      "title": "UserProfile",
-      "description": "User profile in the application",
-      "type": "object",
-      "properties": {
-        "nid": { "type": "string" },
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "serviceId": { "type": "string" }
-      }
+  "name": "SMART MONIT 1.0 — Architecture Nationale Synchronisée",
+  "version": "2.0.0",
+  "collections": {
+    "sm_users": {
+      "key": "nid",
+      "description": "Profils portables nationaux identifiés par NID (Utilisateur, Moniteur EPMS, Autorité)"
     },
-    "Infrastructure": {
-      "type": "object",
-      "title": "Infrastructure",
-      "description": "Sports infrastructure",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "serviceId": { "type": "string" }
-      }
+    "sm_services": {
+      "key": "id",
+      "description": "Cellules et services EPMS des bases aériennes et EAR (règlements locaux, contacts ORFA/urgence)"
     },
-    "Equipment": {
-      "type": "object",
-      "title": "Equipment",
-      "description": "Sports equipment",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "infrastructureId": { "type": "string" }
-      }
+    "sm_infrastructures": {
+      "key": "id",
+      "description": "Installations sportives par base avec règles normatives (Code du Sport, PIA 7.1.1)"
     },
-    "Program": {
-      "type": "object",
-      "title": "Program",
-      "description": "Workout program",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" }
-      }
+    "sm_equipment": {
+      "key": "id",
+      "description": "Inventaire matériel rattaché aux infrastructures (NF EN ISO 20957, NF S52-409, NF EN 12572)"
     },
-    "CollectiveSession": {
-      "type": "object",
-      "title": "CollectiveSession",
-      "description": "Group workout session",
-      "properties": {
-        "id": { "type": "string" },
-        "serviceId": { "type": "string" }
-      }
+    "sm_inspections": {
+      "key": "id",
+      "description": "Registre de sécurité numérique horodaté (Art. R.322-25 Code du Sport)"
     },
-    "Route": {
-      "type": "object",
-      "title": "Route",
-      "description": "Workout route",
-      "properties": {
-        "id": { "type": "string" }
-      }
+    "sm_programs": {
+      "key": "id",
+      "description": "Programmes individuels, programmes directeurs (personnalisation de masse) et mémoire EPMS nationale"
     },
-    "ActiveSession": {
-      "type": "object",
-      "title": "ActiveSession",
-      "description": "Current active session",
-      "properties": {
-        "id": { "type": "string" }
-      }
+    "sm_collective_sessions": {
+      "key": "id",
+      "description": "Planning APMS hebdomadaire, créneaux CCPM, événements sportifs et listes d'attente"
     },
-    "Notification": {
-      "type": "object",
-      "title": "Notification",
-      "description": "Global user notification",
-      "properties": {
-        "id": { "type": "string" }
-      }
-    }
-  },
-  "firestore": {
-    "global_data/global": {
-      "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Global storage since standard UI does not utilize collections"
+    "sm_global_sessions": {
+      "key": "id",
+      "description": "Bibliothèque nationale des séances et WODs (mémoire EPMS mutualisée)"
+    },
+    "sm_exercises": {
+      "key": "id",
+      "description": "Référentiel national des exercices EPMS"
+    },
+    "sm_routes": {
+      "key": "id",
+      "description": "Parcours officiels GPX (Course à pied, VTT, Vélo route) par base"
+    },
+    "sm_active_sessions": {
+      "key": "id",
+      "description": "Présence en salle et sur parcours en temps réel (Monitoring Live)"
+    },
+    "sm_sport_registry": {
+      "key": "id",
+      "description": "Registre Sport Unité numérique horodaté (statut en service Directive 17615)"
+    },
+    "sm_notifications": {
+      "key": "id",
+      "description": "Alertes urgences médicales, rappels planning, validations programmes et alertes ORFA"
+    },
+    "sm_handovers": {
+      "key": "id",
+      "description": "Traçabilité immuable des passages de consigne / postage numérique Autorité"
+    },
+    "sm_audit_logs": {
+      "key": "id",
+      "description": "Journal d'audit sécurité & accès RGPD/CNIL (append-only, rétention 12 mois)"
     }
   }
 }

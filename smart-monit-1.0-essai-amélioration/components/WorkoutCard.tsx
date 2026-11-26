@@ -1,5 +1,7 @@
 import React from 'react';
 import { Session, WorkoutType } from '../types';
+import ExerciseIllustration from './ExerciseIllustration';
+import { resolveExerciseVisual } from '../utils/exerciseVisuals';
 
 interface WorkoutCardProps {
   session: Session;
@@ -10,72 +12,110 @@ interface WorkoutCardProps {
 const WorkoutCard: React.FC<WorkoutCardProps> = ({ session, onAction, actionLabel }) => {
   const getTypeColor = (type?: string) => {
     switch (type) {
-      case WorkoutType.EMOM: return 'border-t-[#d4af37] bg-[#fffdf5] text-[#b8962e]';
-      case WorkoutType.TABATA: return 'border-t-[#fb8c00] bg-[#fffaf0] text-[#e65100]';
-      case WorkoutType.AMRAP: return 'border-t-[#e53935] bg-[#fff8f8] text-[#c62828]';
-      case WorkoutType.FOR_TIME: return 'border-t-[#1a237e] bg-[#f5f6ff] text-[#1a237e]';
-      case WorkoutType.HYROX: return 'border-t-[#00695c] bg-[#f2fdfb] text-[#004d40]';
-      case WorkoutType.MUSCU: return 'border-t-[#424242] bg-[#f9f9f9] text-[#212121]';
-      case WorkoutType.CARDIO: return 'border-t-[#000000] bg-[#f9f9f9] text-[#212121]';
-      default: return 'border-t-military-600 bg-white text-military-900';
-    }
-  };
-
-  const getBtnColor = (type?: string) => {
-    switch (type) {
-      case WorkoutType.EMOM: return 'bg-[#d4af37] hover:bg-[#b8962e] text-black';
-      case WorkoutType.TABATA: return 'bg-[#fb8c00] hover:bg-[#ef6c00] text-white';
-      case WorkoutType.AMRAP: return 'bg-[#e53935] hover:bg-[#c62828] text-white';
-      case WorkoutType.FOR_TIME: return 'bg-[#1a237e] hover:bg-[#121858] text-white';
-      case WorkoutType.HYROX: return 'bg-[#00695c] hover:bg-[#004d40] text-white';
-      case WorkoutType.MUSCU: return 'bg-[#424242] hover:bg-[#212121] text-white';
-      case WorkoutType.CARDIO: return 'bg-[#000000] hover:bg-[#212121] text-white';
-      default: return 'bg-military-800 hover:bg-military-900 text-white';
+      case WorkoutType.EMOM:
+        return { border: 'border-t-[#d4af37]', bg: 'bg-[#fffdf5]', text: 'text-[#9e7d19]', btn: 'bg-[#d4af37] hover:bg-[#b8962e] text-military-950' };
+      case WorkoutType.TABATA:
+        return { border: 'border-t-[#fb8c00]', bg: 'bg-[#fffaf0]', text: 'text-[#c25000]', btn: 'bg-[#fb8c00] hover:bg-[#e67e00] text-white' };
+      case WorkoutType.AMRAP:
+        return { border: 'border-t-[#e53935]', bg: 'bg-[#fff8f8]', text: 'text-[#b71c1c]', btn: 'bg-[#e53935] hover:bg-[#c62828] text-white' };
+      case WorkoutType.FOR_TIME:
+        return { border: 'border-t-[#1a237e]', bg: 'bg-[#f5f6ff]', text: 'text-[#1a237e]', btn: 'bg-[#1a237e] hover:bg-[#121858] text-white' };
+      case WorkoutType.HYROX:
+        return { border: 'border-t-[#00695c]', bg: 'bg-[#f2fdfb]', text: 'text-[#004d40]', btn: 'bg-[#00695c] hover:bg-[#004d40] text-white' };
+      case WorkoutType.CARDIO:
+        return { border: 'border-t-emerald-700', bg: 'bg-white', text: 'text-emerald-900', btn: 'bg-emerald-800 hover:bg-emerald-900 text-white' };
+      case WorkoutType.MOBILITE:
+        return { border: 'border-t-indigo-600', bg: 'bg-white', text: 'text-indigo-900', btn: 'bg-indigo-700 hover:bg-indigo-800 text-white' };
+      default:
+        return { border: 'border-t-military-800', bg: 'bg-white', text: 'text-military-900', btn: 'bg-military-900 hover:bg-military-800 text-white' };
     }
   };
 
   const getLevelColor = (level?: string) => {
     switch (level) {
-      case 'Facile': return 'bg-white text-green-700 border border-green-200';
-      case 'Moyen': return 'bg-white text-orange-600 border border-orange-200';
-      case 'Intense': return 'bg-white text-red-700 border border-red-200';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'Facile':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Moyen':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Intense':
+        return 'bg-red-50 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-50 text-gray-600 border-gray-200';
     }
   };
 
-  const typeColors = getTypeColor(session.workoutType);
-  const btnColors = getBtnColor(session.workoutType);
+  const theme = getTypeColor(session.workoutType || session.type);
+  const exercises = (session.content?.mainBlock || []).filter((b) => !b.isRecovery);
+  const previewExercises =
+    exercises.length > 0
+      ? exercises.slice(0, 3).map((e) => e.exercise)
+      : [session.title];
+  const primaryGuide = resolveExerciseVisual(previewExercises[0], session.workoutType || session.type);
 
   return (
-    <div className={`rounded-xl p-5 shadow-sm flex flex-col justify-between border-t-[5px] ${typeColors.split(' ')[0]} ${typeColors.split(' ')[1]}`}>
+    <div className={`rounded-2xl p-5 shadow-sm border border-gray-100 border-t-4 flex flex-col justify-between transition-all hover:shadow-md ${theme.border} ${theme.bg}`}>
       <div>
-        <div className="flex flex-wrap gap-2 mb-3">
-          {session.material?.map(m => (
-            <span key={m} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              {m}
-            </span>
-          ))}
-          {session.bodyZone && (
-            <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              {session.bodyZone}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {session.workoutType && (
+            <span className="bg-military-900 text-white px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+              {session.workoutType}
             </span>
           )}
-          <span className="bg-orange-50 text-orange-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+          <span className="bg-orange-50 text-orange-800 border border-orange-100 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase">
             {session.durationMinutes === 0 ? 'Temps libre' : `${session.durationMinutes} min`}
           </span>
           {session.level && (
-            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getLevelColor(session.level)}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border ${getLevelColor(session.level)}`}>
               {session.level}
             </span>
           )}
+          {session.bodyZone && (
+            <span className="bg-blue-50 text-blue-800 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase">
+              {session.bodyZone}
+            </span>
+          )}
         </div>
-        <h3 className={`text-lg font-black mb-2 ${typeColors.split(' ')[2]}`}>{session.title}</h3>
-        <p className="text-sm text-gray-700 mb-4 line-clamp-3 leading-relaxed">{session.description}</p>
+
+        <h3 className={`text-base font-black mb-1.5 leading-snug ${theme.text}`}>{session.title}</h3>
+        <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">{session.description}</p>
+
+        {/* Bandeau illustré animé des exercices (clic = fiche biomécanique complète) */}
+        <div className="mb-3 p-2.5 rounded-xl bg-military-50/70 border border-military-100">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-military-600 flex items-center gap-1">
+              <span className="material-icons text-[12px] text-action-600">accessibility_new</span>
+              {exercises.length > 0 ? `${exercises.length} exercice(s) illustré(s)` : primaryGuide.categoryLabel}
+            </span>
+            <span className="text-[9px] text-gray-400 font-semibold">Cliquer schéma = technique</span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {previewExercises.map((exName, i) => (
+              <div key={i} className="flex items-center gap-1.5 bg-white pr-2.5 rounded-xl border border-gray-200/80 shrink-0 max-w-[165px]">
+                <ExerciseIllustration
+                  exerciseName={exName}
+                  fallbackType={session.workoutType || session.type}
+                  size="xs"
+                />
+                <span className="text-[10px] font-bold text-military-800 truncate">{exName}</span>
+              </div>
+            ))}
+            {exercises.length > 3 && (
+              <span className="text-[10px] font-black text-military-600 bg-white px-2 py-1 rounded-lg border border-gray-200 shrink-0">
+                +{exercises.length - 3}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {session.createdByBase && (
+          <p className="text-[10px] font-bold text-gray-400 mb-3">Source : {session.createdByBase}</p>
+        )}
       </div>
-      <button 
+      <button
         onClick={() => onAction(session)}
-        className={`w-full py-3 rounded-lg font-bold uppercase tracking-wider text-sm transition-colors ${btnColors}`}
+        className={`w-full py-2.5 rounded-xl font-black uppercase tracking-wider text-xs transition-colors active:scale-95 flex items-center justify-center gap-1.5 ${theme.btn}`}
       >
+        <span className="material-icons text-sm">play_arrow</span>
         {actionLabel}
       </button>
     </div>

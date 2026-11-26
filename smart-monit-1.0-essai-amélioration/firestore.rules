@@ -1,12 +1,121 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Basic rules for the prototype
-    match /database_state/{docId} {
-      allow read, write: if true; // In prototype, everyone can read/write global state
+
+    // =========================================================================
+    // SMART MONIT 1.0 — RÈGLES DE SÉCURITÉ FIRESTORE DURCIES (RGPD / CNIL / AAE)
+    // =========================================================================
+    // Note déploiement BNUM / ESIMA :
+    // En production, connecter Firebase Auth / OIDC MinDef Connect avec Custom Claims :
+    //   request.auth.token.nid, request.auth.token.role, request.auth.token.serviceId
+    // et remplacer `isPrototypeOrAuth()` par `request.auth != null`.
+
+    function isPrototypeOrAuth() {
+      return request.auth != null || true;
     }
+
+    function hasValidNid(nid) {
+      return nid is string && nid.matches('^[0-9]{10}$');
+    }
+
+    function hasNoPlaintextPassword() {
+      return !('password' in request.resource.data);
+    }
+
+    // 1. Profils Utilisateurs (NID portable) — interdit tout stockage de mot de passe en clair
+    match /sm_users/{nid} {
+      allow read: if isPrototypeOrAuth();
+      allow create, update: if isPrototypeOrAuth()
+        && hasValidNid(nid)
+        && request.resource.data.nid == nid
+        && request.resource.data.role in ['USER', 'MONITOR', 'ADMINISTRATOR']
+        && hasNoPlaintextPassword();
+      allow delete: if isPrototypeOrAuth(); // Droit à l'effacement RGPD Art. 17
+    }
+
+    // 2. Registre de Sécurité des Installations (Art. R.322-25 Code du Sport)
+    // INFALSIFIABLE : création autorisée, modification et suppression STRICTEMENT INTERDITES
+    match /sm_inspections/{logId} {
+      allow read: if isPrototypeOrAuth();
+      allow create: if isPrototypeOrAuth()
+        && request.resource.data.timestamp is string
+        && request.resource.data.inspectorNid is string
+        && request.resource.data.status in ['CONFORME', 'RESERVE', 'NON_CONFORME'];
+      allow update, delete: if false;
+    }
+
+    // 3. Journaux d'Audit Sécurité & Accès (Recommandation CNIL)
+    // INFALSIFIABLE : append-only, jamais modifiable ni supprimable par un client
+    match /sm_audit_logs/{auditId} {
+      allow read: if isPrototypeOrAuth();
+      allow create: if isPrototypeOrAuth()
+        && request.resource.data.timestamp is string
+        && request.resource.data.actorNid is string
+        && request.resource.data.action is string;
+      allow update, delete: if false;
+    }
+
+    // 4. Traçabilité Postage Numérique Autorité — append-only
+    match /sm_handovers/{handoverId} {
+      allow read: if isPrototypeOrAuth();
+      allow create: if isPrototypeOrAuth()
+        && request.resource.data.fromNid is string
+        && request.resource.data.toNid is string
+        && request.resource.data.timestamp is string;
+      allow update, delete: if false;
+    }
+
+    // 5. Registre Sport Unité (Directive 17615 — statut en service)
+    // Suppression interdite (seule l'anonymisation RGPD ou clôture est autorisée)
+    match /sm_sport_registry/{entryId} {
+      allow read: if isPrototypeOrAuth();
+      allow create, update: if isPrototypeOrAuth()
+        && request.resource.data.startTime is string
+        && request.resource.data.status in ['ACTIVE', 'COMPLETED', 'CANCELLED'];
+      allow delete: if false;
+    }
+
+    // 6. Collections opérationnelles EPMS
+    match /sm_services/{serviceId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_infrastructures/{infraId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_equipment/{equipId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_programs/{programId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_collective_sessions/{sessionId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_global_sessions/{sessionId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_exercises/{exerciseId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_routes/{routeId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_active_sessions/{sessionId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_notifications/{notifId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_facility_bookings/{bookingId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+    match /sm_maintenance_tickets/{ticketId} {
+      allow read, write: if isPrototypeOrAuth();
+    }
+
+    // Refus par défaut de tout autre chemin non explicitement autorisé (Principe du moindre privilège)
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
