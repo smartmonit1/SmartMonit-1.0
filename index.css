@@ -260,6 +260,16 @@ textarea::placeholder {
   font-size: 1rem;
 }
 
+.monitor-quick-access {
+  position: sticky;
+  top: calc(4.75rem + env(safe-area-inset-top));
+  z-index: 30;
+}
+
+.monitor-area-card {
+  min-width: 0;
+}
+
 .pwa-floating-banner {
   bottom: calc(9rem + env(safe-area-inset-bottom));
   left: 0.75rem;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserProfile, AppNotification, UserRole } from '../types';
 import { db } from '../services/mockDatabase';
 import { useToast } from './ToastProvider';
@@ -11,6 +11,12 @@ const EmergencyButton: React.FC<EmergencyButtonProps> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const openEmergencyDialog = () => setIsOpen(true);
+    window.addEventListener('sm:open-emergency', openEmergencyDialog);
+    return () => window.removeEventListener('sm:open-emergency', openEmergencyDialog);
+  }, []);
 
   if (!user) return null;
 

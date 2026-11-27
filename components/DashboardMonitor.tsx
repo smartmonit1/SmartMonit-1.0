@@ -52,6 +52,52 @@ interface Props {
 
 type TabView = 'home' | 'coach' | 'users' | 'programs' | 'infras' | 'inventory' | 'registry' | 'agenda' | 'governance';
 
+const MONITOR_AREAS: {
+  id: 'live' | 'coaching' | 'planning' | 'facilities';
+  title: string;
+  description: string;
+  icon: string;
+  tabs: { id: TabView; label: string; icon: string }[];
+}[] = [
+  {
+    id: 'live',
+    title: 'Vue d’ensemble',
+    description: 'Suivre l’activité en direct et repérer les actions à traiter.',
+    icon: 'monitor_heart',
+    tabs: [{ id: 'home', label: 'Hub Live', icon: 'dashboard' }]
+  },
+  {
+    id: 'coaching',
+    title: 'Coaching',
+    description: 'Accompagner les pratiquants et organiser leurs programmes.',
+    icon: 'sports',
+    tabs: [
+      { id: 'coach', label: 'Assistant coach', icon: 'auto_awesome' },
+      { id: 'users', label: 'Pratiquants', icon: 'people' },
+      { id: 'programs', label: 'Programmes', icon: 'model_training' },
+      { id: 'governance', label: 'IA & confidentialité', icon: 'security' }
+    ]
+  },
+  {
+    id: 'planning',
+    title: 'Planning collectif',
+    description: 'Planifier et gérer les cours, les créneaux et les réservations.',
+    icon: 'calendar_month',
+    tabs: [{ id: 'agenda', label: 'Cours & réservations', icon: 'event_available' }]
+  },
+  {
+    id: 'facilities',
+    title: 'Installations & matériel',
+    description: 'Gérer les espaces, les équipements, leur maintenance et leur suivi.',
+    icon: 'stadium',
+    tabs: [
+      { id: 'infras', label: 'Installations', icon: 'stadium' },
+      { id: 'inventory', label: 'Matériel', icon: 'fitness_center' },
+      { id: 'registry', label: 'Registre unité', icon: 'verified_user' }
+    ]
+  }
+];
+
 const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabView>('home');
@@ -65,6 +111,8 @@ const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => 
 
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
   const [selectedLiveSession, setSelectedLiveSession] = useState<ActiveSession | null>(null);
+  const activeParticipants = new Set(activeSessions.map((session) => session.userId)).size;
+  const activeArea = MONITOR_AREAS.find((area) => area.tabs.some((tab) => tab.id === activeTab)) || MONITOR_AREAS[0];
 
   useEffect(() => {
     const syncLiveSessions = () => {
@@ -663,48 +711,115 @@ const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => 
         <div>
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-military-500">
             <span className="material-icons text-base text-emerald-700" aria-hidden="true">monitoring</span>
-            Gestion & coaching
+            Espace moniteur
           </div>
-          <h2 className="text-2xl md:text-3xl font-black text-military-900 mt-1">Espace moniteur</h2>
-          <p className="text-sm text-military-500 mt-1">{getBaseName(user.serviceId)} · Coaching, cours et équipements</p>
+          <h2 className="text-2xl md:text-3xl font-black text-military-900 mt-1">{activeArea.title}</h2>
+          <p className="text-sm text-military-500 mt-1">{activeArea.description}</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-bold">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800">
-            <span className={`h-2 w-2 rounded-full ${activeSessions.length ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-            {activeSessions.length} séance{activeSessions.length === 1 ? '' : 's'} en cours
-          </span>
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 ${
-            alerts.length ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-military-200 bg-white text-military-600'
-          }`}>
-            <span className="material-icons text-sm" aria-hidden="true">{alerts.length ? 'priority_high' : 'check_circle'}</span>
-            {alerts.length ? `${alerts.length} action${alerts.length === 1 ? '' : 's'} à traiter` : 'Aucune action en attente'}
-          </span>
+        <button
+          type="button"
+          onClick={() => setActiveTab('home')}
+          className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
+            alerts.length
+              ? 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100'
+              : 'border-military-200 bg-white text-military-600 hover:bg-military-50'
+          }`}
+          aria-label={alerts.length ? `Ouvrir le hub Live : ${alerts.length} actions à traiter` : 'Ouvrir le hub Live'}
+        >
+          <span className="material-icons text-base" aria-hidden="true">{alerts.length ? 'priority_high' : 'check_circle'}</span>
+          {alerts.length ? `${alerts.length} action${alerts.length === 1 ? '' : 's'} à traiter` : 'Aucune action en attente'}
+        </button>
+      </section>
+
+      <nav className="grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Domaines de l’espace moniteur">
+        {MONITOR_AREAS.map((area) => {
+          const selected = activeArea.id === area.id;
+          const firstTab = area.tabs[0];
+          return (
+            <button
+              key={area.id}
+              type="button"
+              aria-current={selected ? 'page' : undefined}
+              onClick={() => setActiveTab(firstTab.id)}
+              className={`monitor-area-card flex min-h-20 items-center gap-3 rounded-2xl border p-3 text-left transition-all sm:p-4 ${
+                selected
+                  ? 'border-military-900 bg-military-900 text-white shadow-md'
+                  : 'border-military-200 bg-white text-military-800 hover:border-emerald-400 hover:bg-emerald-50'
+              }`}
+            >
+              <span className={`material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl ${
+                selected ? 'bg-white/10 text-action-400' : 'bg-military-50 text-emerald-700'
+              }`}>
+                {area.icon}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-xs font-black uppercase leading-snug sm:text-sm">{area.title}</span>
+                <span className={`mt-0.5 block text-[11px] font-semibold ${
+                  selected ? 'text-military-200' : 'text-military-500'
+                }`}>
+                  {area.tabs.length === 1 ? '1 espace' : `${area.tabs.length} espaces`}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <section className="monitor-quick-access rounded-2xl border border-military-200 bg-white/95 p-2.5 shadow-sm backdrop-blur" aria-label="Accès rapides moniteur">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={() => setActiveTab('home')}
+            aria-label={`Ouvrir le hub Live : ${activeSessions.length} séances en cours, ${activeParticipants} pratiquants`}
+            className="flex min-h-12 flex-1 items-center gap-3 rounded-xl px-2.5 py-2 text-left hover:bg-emerald-50 focus-visible:outline-emerald-700"
+          >
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800">
+              <span className="material-icons">sensors</span>
+              {activeSessions.length > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-black uppercase text-military-900">Hub Live</span>
+              <span className="block truncate text-[11px] font-semibold text-military-600">
+                {activeSessions.length} séance{activeSessions.length === 1 ? '' : 's'} · {activeParticipants} pratiquant{activeParticipants === 1 ? '' : 's'}
+              </span>
+            </span>
+            <span className="material-icons ml-auto text-military-400" aria-hidden="true">arrow_forward</span>
+          </button>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('sm:open-emergency'))}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-black text-red-800 hover:bg-red-100"
+            >
+              <span className="material-icons text-base" aria-hidden="true">medical_services</span>
+              Urgence
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('registry')}
+              aria-current={activeTab === 'registry' ? 'page' : undefined}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-military-200 bg-white px-3 text-xs font-black text-military-800 hover:bg-military-50"
+            >
+              <span className="material-icons text-base text-emerald-700" aria-hidden="true">fact_check</span>
+              Registre
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* Barre d'onglets Moniteur */}
-      <div className="overflow-x-auto pb-1 no-scrollbar">
-        <div className="flex gap-2 min-w-max" role="group" aria-label="Sections de l’espace moniteur">
-          {[
-            { id: 'home', label: 'Vue d’ensemble', icon: 'dashboard' },
-            { id: 'coach', label: 'Assistant coach', icon: 'auto_awesome' },
-            { id: 'users', label: 'Membres', icon: 'people' },
-            { id: 'programs', label: 'Programmes', icon: 'model_training' },
-            { id: 'infras', label: 'Installations', icon: 'stadium' },
-            { id: 'inventory', label: 'Matériel', icon: 'fitness_center' },
-            { id: 'registry', label: 'Suivi & sécurité', icon: 'verified_user' },
-            { id: 'agenda', label: 'Planning des cours', icon: 'calendar_today' },
-            { id: 'governance', label: 'IA & confidentialité', icon: 'security' }
-          ].map((tab) => (
+      {activeArea.tabs.length > 1 && (
+        <nav className="flex flex-wrap gap-2" aria-label={`Sous-sections : ${activeArea.title}`}>
+          {activeArea.tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              aria-pressed={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id as TabView)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all ${
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all sm:px-4 ${
                 activeTab === tab.id
-                  ? 'bg-military-900 text-white shadow-md'
-                  : 'bg-white text-military-600 border border-military-100 hover:bg-military-50'
+                  ? 'border-military-900 bg-military-900 text-white shadow-sm'
+                  : 'border-military-200 bg-white text-military-700 hover:border-emerald-400 hover:bg-emerald-50'
               }`}
             >
               <span className={`material-icons text-base ${activeTab === tab.id ? 'text-action-400' : 'text-military-400'}`}>
@@ -713,8 +828,8 @@ const DashboardMonitor: React.FC<Props> = ({ user, onLaunchCoachedSession }) => 
               {tab.label}
             </button>
           ))}
-        </div>
-      </div>
+        </nav>
+      )}
 
       {activeTab === 'coach' && (
         <CoachLaunchPanel
