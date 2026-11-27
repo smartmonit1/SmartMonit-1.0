@@ -971,20 +971,87 @@ const deleteDocFromFirestore = <T>(cfg: CollectionConfig<T>, docId: string) => {
 };
 
 const syncFullCollectionToFirestore = <T>(cfg: CollectionConfig<T>, items: T[]) => {
-  if (!dbFirestore) return;
+  if (!dbFirestore || items.length === 0) return;
   try {
-    const batch = writeBatch(dbFirestore);
-    items.slice(0, 400).forEach((item) => {
-      const id = String(item[cfg.idField]);
-      if (id) {
-        batch.set(doc(dbFirestore, cfg.firestoreCollection, id), sanitizeForFirestore(cfg, item));
-      }
-    });
-    batch.commit().catch((err) => {
-      handleFirestoreError(err, OperationType.WRITE, cfg.firestoreCollection);
-    });
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+      const chunk = items.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(dbFirestore);
+      chunk.forEach((item) => {
+        const id = String(item[cfg.idField]);
+        if (id) {
+          batch.set(doc(dbFirestore, cfg.firestoreCollection, id), sanitizeForFirestore(cfg, item));
+        }
+      });
+      batch.commit().catch((err) => {
+        handleFirestoreError(err, OperationType.WRITE, cfg.firestoreCollection);
+      });
+    }
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, cfg.firestoreCollection);
+  }
+};
+
+let exercisesMigrationInFlight = false;
+
+const isOfficialCatalog475Synced = (remoteItems: ExerciseLibraryItem[]): boolean => {
+  if (remoteItems.length < MOCK_EXERCISES.length) return false;
+  let hasFirst = false;
+  let hasLast = false;
+  for (const item of remoteItems) {
+    if (item.id === 'ex_001_barbell_back_squat') hasFirst = true;
+    if (item.id === 'ex_475_sub_maximal_short_accelerations_15m') hasLast = true;
+    if (String(item.id).startsWith('ex_muscu_')) return false;
+  }
+  return hasFirst && hasLast;
+};
+
+const replaceExerciseCatalogInFirestore = async (
+  cfg: CollectionConfig<ExerciseLibraryItem>,
+  remoteItems: ExerciseLibraryItem[]
+) => {
+  if (!dbFirestore || exercisesMigrationInFlight) return;
+  exercisesMigrationInFlight = true;
+  try {
+    const officialIds = new Set(MOCK_EXERCISES.map((ex) => ex.id));
+    const customExercises = remoteItems.filter(
+      (ex) =>
+        ex.isCustom === true ||
+        (!officialIds.has(ex.id) &&
+          !/^ex_(muscu|pilates|renfo|cardio|run|mil)_/.test(String(ex.id)))
+    );
+    const merged = [...MOCK_EXERCISES, ...customExercises];
+
+    localStorage.setItem(PREFIX + cfg.localKey, JSON.stringify(merged));
+    localStorage.setItem(PREFIX + 'exercises_version', EXERCISES_CATALOG_VERSION);
+    emitUpdate();
+
+    // Suppression des anciens exercices seedés obsolètes
+    const obsoleteIds = remoteItems
+      .filter((ex) => !officialIds.has(ex.id) && !customExercises.some((c) => c.id === ex.id))
+      .map((ex) => ex.id);
+
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < obsoleteIds.length; i += CHUNK_SIZE) {
+      const delBatch = writeBatch(dbFirestore);
+      obsoleteIds.slice(i, i + CHUNK_SIZE).forEach((id) => {
+        delBatch.delete(doc(dbFirestore!, cfg.firestoreCollection, id));
+      });
+      await delBatch.commit();
+    }
+
+    // Écriture des 475 nouveaux exercices (en lots de 400 max < limite 500 Firestore)
+    for (let i = 0; i < merged.length; i += CHUNK_SIZE) {
+      const setBatch = writeBatch(dbFirestore);
+      merged.slice(i, i + CHUNK_SIZE).forEach((item) => {
+        setBatch.set(doc(dbFirestore!, cfg.firestoreCollection, item.id), sanitizeForFirestore(cfg, item));
+      });
+      await setBatch.commit();
+    }
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, cfg.firestoreCollection);
+  } finally {
+    exercisesMigrationInFlight = false;
   }
 };
 
@@ -1054,10 +1121,19 @@ const enforceSecurityAndRetention = async () => {
 export const getSyncStatus = () => ({ firestoreConnected });
 
 export const initializeDatabaseSync = () => {
-  // Remise à neuf automatique du catalogue d'exercices vers la v5 (108 exercices classés)
+  // Remise à neuf automatique du catalogue d'exercices vers la v7 (475 exercices classés)
   const currentCatalogVersion = localStorage.getItem(PREFIX + 'exercises_version');
   if (currentCatalogVersion !== EXERCISES_CATALOG_VERSION) {
-    localStorage.setItem(PREFIX + 'exercises', JSON.stringify(MOCK_EXERCISES));
+    const existingLocal = (() => {
+      try {
+        const raw = localStorage.getItem(PREFIX + 'exercises');
+        return raw ? (JSON.parse(raw) as ExerciseLibraryItem[]) : [];
+      } catch {
+        return [];
+      }
+    })();
+    const customLocal = existingLocal.filter((ex) => ex.isCustom === true);
+    localStorage.setItem(PREFIX + 'exercises', JSON.stringify([...MOCK_EXERCISES, ...customLocal]));
     localStorage.setItem(PREFIX + 'exercises_version', EXERCISES_CATALOG_VERSION);
   }
 
@@ -1094,8 +1170,15 @@ export const initializeDatabaseSync = () => {
           firestoreConnected = true;
           if (!snapshot.empty) {
             const remoteItems = snapshot.docs.map((d) => d.data());
-            localStorage.setItem(PREFIX + cfg.localKey, JSON.stringify(remoteItems));
-            emitUpdate();
+            if (name === 'exercises' && !isOfficialCatalog475Synced(remoteItems as ExerciseLibraryItem[])) {
+              replaceExerciseCatalogInFirestore(
+                cfg as CollectionConfig<ExerciseLibraryItem>,
+                remoteItems as ExerciseLibraryItem[]
+              );
+            } else {
+              localStorage.setItem(PREFIX + cfg.localKey, JSON.stringify(remoteItems));
+              emitUpdate();
+            }
           } else {
             // Premier déploiement sur cette collection : on pousse les données de référence nationales
             const localItems = loadLocal(cfg);

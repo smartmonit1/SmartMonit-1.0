@@ -249,11 +249,18 @@ export interface SportRegistryEntry {
 
 export type ExerciseCategory =
   | 'Musculation'
-  | 'Pilates'
   | 'Renforcement'
-  | 'Machine Cardio'
-  | 'Course'
+  | 'Cardio en salle'
+  | 'Hyrox / CrossFit'
+  | 'Pilates'
   | 'Mobilité'
+  | 'Sport Santé'
+  | 'Rééducation'
+  | 'Course'
+  | 'Préparation physique'
+  | 'Échauffement'
+  // Rétrocompatibilité éventuelle
+  | 'Machine Cardio'
   | 'Marche / Franchissement'
   | 'Natation'
   | 'Sports Collectifs';
@@ -273,13 +280,26 @@ export type MovementPattern =
 export interface ExerciseLibraryItem {
   id: string;
   name: string;
+  nameEn?: string;
+  domain?: string;
+  subCategory?: string;
   category?: ExerciseCategory;
   muscleGroup: string;
+  primaryMuscles?: string[];
   secondaryMuscles?: string[];
+  antagonistMuscles?: string[];
   movementPattern?: MovementPattern;
+  rawMovementPattern?: string;
   equipment: string;
+  equipmentList?: string[];
   type: 'Force' | 'Cardio' | 'Mobility' | 'Polyarticulaire';
-  difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
+  difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Élite';
+  energySystem?: 'anaerobic_alactic' | 'anaerobic_lactic' | 'aerobic';
+  impactLevel?: 'none' | 'low' | 'medium' | 'high';
+  laterality?: 'bilateral' | 'unilateral' | 'unilateral_reciprocal';
+  planeOfMotion?: 'sagittal' | 'frontal' | 'transverse' | 'multi_planar';
+  tempoDefault?: string;
+  isCustom?: boolean;
   description?: string;
   cues?: string[];
   commonMistakes?: string[];

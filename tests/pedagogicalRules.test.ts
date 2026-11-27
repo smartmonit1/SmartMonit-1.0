@@ -20,9 +20,9 @@ describe('Moteur d\'Alertes Pédagogiques PIA 7.1.1 & Analytique', () => {
                 title: 'Séance S1',
                 type: 'MUSCU',
                 blocks: [
-                  { id: 'wu1', type: 'WARMUP', title: 'Échauffement', exercises: [{ id: 'w1e', libraryId: 'ex_pilates_06', name: 'Shoulder Bridge', sets: 2, reps: '10' }] },
-                  { id: 'm1', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e1', libraryId: 'ex_muscu_01', name: 'Développé Couché Barre', sets: 4, reps: '8', percent1RM: 75 }, { id: 'e2', libraryId: 'ex_muscu_12', name: 'Rowing Barre Buste Penché', sets: 4, reps: '8', percent1RM: 70 }] },
-                  { id: 'cd1', type: 'COOLDOWN', title: 'Retour au calme', exercises: [{ id: 'c1e', libraryId: 'ex_pilates_07', name: 'Spine Stretch Forward', sets: 1, holdSec: 45 }] }
+                  { id: 'wu1', type: 'WARMUP', title: 'Échauffement', exercises: [{ id: 'w1e', libraryId: 'ex_446_cat_cow_thoracic_mobilization', name: 'Dos rond / Dos creux (Cat-Cow)', sets: 2, reps: '10' }] },
+                  { id: 'm1', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e1', libraryId: 'ex_006_barbell_flat_bench_press', name: 'Développé couché barre', sets: 4, reps: '8', percent1RM: 75 }, { id: 'e2', libraryId: 'ex_011_barbell_bent_over_row_pronation', name: 'Rowing barre buste penché pronation', sets: 4, reps: '8', percent1RM: 70 }] },
+                  { id: 'cd1', type: 'COOLDOWN', title: 'Retour au calme', exercises: [{ id: 'c1e', libraryId: 'ex_215_spine_stretch_forward_pilates', name: 'Étirement de la colonne vers l\'avant (Spine Stretch)', sets: 1, holdSec: 45 }] }
                 ],
                 exercises: []
               }
@@ -37,9 +37,9 @@ describe('Moteur d\'Alertes Pédagogiques PIA 7.1.1 & Analytique', () => {
                 title: 'Séance S2',
                 type: 'MUSCU',
                 blocks: [
-                  { id: 'wu2', type: 'WARMUP', title: 'Échauffement', exercises: [{ id: 'w2e', libraryId: 'ex_pilates_06', name: 'Shoulder Bridge', sets: 2, reps: '10' }] },
-                  { id: 'm2', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e3', libraryId: 'ex_muscu_01', name: 'Développé Couché Barre', sets: 8, reps: '8', percent1RM: 80 }, { id: 'e4', libraryId: 'ex_muscu_12', name: 'Rowing Barre Buste Penché', sets: 8, reps: '8', percent1RM: 75 }] },
-                  { id: 'cd2', type: 'COOLDOWN', title: 'Retour au calme', exercises: [{ id: 'c2e', libraryId: 'ex_pilates_07', name: 'Spine Stretch Forward', sets: 1, holdSec: 45 }] }
+                  { id: 'wu2', type: 'WARMUP', title: 'Échauffement', exercises: [{ id: 'w2e', libraryId: 'ex_446_cat_cow_thoracic_mobilization', name: 'Dos rond / Dos creux (Cat-Cow)', sets: 2, reps: '10' }] },
+                  { id: 'm2', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e3', libraryId: 'ex_006_barbell_flat_bench_press', name: 'Développé couché barre', sets: 8, reps: '8', percent1RM: 80 }, { id: 'e4', libraryId: 'ex_011_barbell_bent_over_row_pronation', name: 'Rowing barre buste penché pronation', sets: 8, reps: '8', percent1RM: 75 }] },
+                  { id: 'cd2', type: 'COOLDOWN', title: 'Retour au calme', exercises: [{ id: 'c2e', libraryId: 'ex_215_spine_stretch_forward_pilates', name: 'Étirement de la colonne vers l\'avant (Spine Stretch)', sets: 1, holdSec: 45 }] }
                 ],
                 exercises: []
               }
@@ -71,7 +71,7 @@ describe('Moteur d\'Alertes Pédagogiques PIA 7.1.1 & Analytique', () => {
                 title: 'Séance nue',
                 type: 'MUSCU',
                 blocks: [
-                  { id: 'm1', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e1', libraryId: 'ex_muscu_01', name: 'Développé Couché Barre', sets: 4, reps: '8' }] }
+                  { id: 'm1', type: 'MAIN', title: 'Corps', exercises: [{ id: 'e1', libraryId: 'ex_006_barbell_flat_bench_press', name: 'Développé couché barre', sets: 4, reps: '8' }] }
                 ],
                 exercises: []
               }
@@ -107,8 +107,8 @@ describe('Moteur d\'Alertes Pédagogiques PIA 7.1.1 & Analytique', () => {
                     type: 'MAIN',
                     title: 'Corps',
                     exercises: [
-                      { id: 'e1', libraryId: 'ex_muscu_01', name: 'Développé Couché Barre', sets: 5, reps: '6', percent1RM: 80 },
-                      { id: 'e2', libraryId: 'ex_muscu_17', name: 'Développé Militaire Barre Debout', sets: 5, reps: '5', percent1RM: 90 }
+                      { id: 'e1', libraryId: 'ex_006_barbell_flat_bench_press', name: 'Développé couché barre', sets: 5, reps: '6', percent1RM: 80 },
+                      { id: 'e2', libraryId: 'ex_009_barbell_overhead_press_ohp', name: 'Développé militaire barre debout', sets: 5, reps: '5', percent1RM: 90 }
                     ]
                   }
                 ],

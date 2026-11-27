@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserProfile, Session, Program, ExerciseLibraryItem, SportsRoute, RouteType } from '../types';
+import { ExerciseCategory, ExerciseLibraryItem, JobType, Program, ProgramStatus, RouteType, Session, SportsRoute, UserProfile } from '../types';
 import { db } from '../services/mockDatabase';
+import { EXERCISE_DOMAINS } from '../utils/exerciseFilters';
 import { getBaseCode } from '../utils/bases';
 import WorkoutCard from './WorkoutCard';
 import SessionCreator from './SessionCreator';
@@ -27,8 +28,9 @@ const LibraryMonitor: React.FC<LibraryMonitorProps> = ({ user }) => {
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [newEx, setNewEx] = useState<Partial<ExerciseLibraryItem>>({
     name: '',
+    category: 'Musculation',
     muscleGroup: 'Pectoraux',
-    equipment: 'PDC',
+    equipment: 'Poids du corps / Tapis',
     type: 'Force',
     difficulty: 'Intermédiaire'
   });
@@ -216,17 +218,28 @@ const LibraryMonitor: React.FC<LibraryMonitorProps> = ({ user }) => {
   const handleCreateExercise = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEx.name?.trim()) return;
+    const selectedCategory = (newEx.category || 'Musculation') as ExerciseCategory;
     db.addExercise({
-      id: `ex_${Date.now()}`,
+      id: `ex_custom_${Date.now()}`,
       name: newEx.name.trim(),
-      muscleGroup: newEx.muscleGroup || 'Complet',
-      equipment: newEx.equipment || 'PDC',
+      domain: selectedCategory,
+      category: selectedCategory,
+      muscleGroup: newEx.muscleGroup || 'Cardio / Full Body',
+      equipment: newEx.equipment || 'Poids du corps / Tapis',
       type: newEx.type || 'Force',
       difficulty: newEx.difficulty || 'Intermédiaire',
+      isCustom: true,
       createdByBase: getBaseCode(user.serviceId)
     });
     setShowAddExercise(false);
-    setNewEx({ name: '', muscleGroup: 'Pectoraux', equipment: 'PDC', type: 'Force', difficulty: 'Intermédiaire' });
+    setNewEx({
+      name: '',
+      category: 'Musculation',
+      muscleGroup: 'Pectoraux',
+      equipment: 'Poids du corps / Tapis',
+      type: 'Force',
+      difficulty: 'Intermédiaire'
+    });
     showToast('Exercice ajouté au référentiel national EPMS.', 'success');
   };
 
@@ -582,6 +595,18 @@ const LibraryMonitor: React.FC<LibraryMonitorProps> = ({ user }) => {
               value={newEx.name || ''}
               onChange={(e) => setNewEx({ ...newEx, name: e.target.value })}
             />
+            <select
+              aria-label="Domaine"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-sm"
+              value={newEx.category || 'Musculation'}
+              onChange={(e) => setNewEx({ ...newEx, category: e.target.value as ExerciseCategory })}
+            >
+              {EXERCISE_DOMAINS.map((dom) => (
+                <option key={dom.id} value={dom.id}>
+                  {dom.label}
+                </option>
+              ))}
+            </select>
             <div className="grid grid-cols-2 gap-3">
               <input
                 placeholder="Groupe musculaire"
@@ -590,7 +615,7 @@ const LibraryMonitor: React.FC<LibraryMonitorProps> = ({ user }) => {
                 onChange={(e) => setNewEx({ ...newEx, muscleGroup: e.target.value })}
               />
               <input
-                placeholder="Matériel (PDC, Barre...)"
+                placeholder="Matériel (Barre, Haltères...)"
                 className="p-3 bg-gray-50 border border-gray-200 rounded-xl font-bold text-sm"
                 value={newEx.equipment || ''}
                 onChange={(e) => setNewEx({ ...newEx, equipment: e.target.value })}
@@ -607,6 +632,7 @@ const LibraryMonitor: React.FC<LibraryMonitorProps> = ({ user }) => {
                 <option value="Débutant">Débutant</option>
                 <option value="Intermédiaire">Intermédiaire</option>
                 <option value="Avancé">Avancé</option>
+                <option value="Élite">Élite</option>
               </select>
             </div>
             <div className="flex gap-3 pt-2">

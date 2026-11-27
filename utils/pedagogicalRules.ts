@@ -458,8 +458,26 @@ export const analyzeProgramPedagogy = (params: {
           ensureSessionBlocks(s).forEach((b) =>
             b.exercises.forEach((ex) => {
               const eq = (ex.equipment || libMap.get(ex.libraryId)?.equipment || '').toLowerCase();
-              if (!eq || eq === 'pdc' || eq === 'tapis' || eq.includes('piste') || eq.includes('ext')) return;
-              const found = okNames.some((n) => n.includes(eq) || (eq.includes('barre') && n.includes('rack')) || (eq.includes('halt') && n.includes('muscu')));
+              if (
+                !eq ||
+                eq === 'pdc' ||
+                eq === 'tapis' ||
+                eq.includes('poids du corps') ||
+                eq.includes('élastiques') ||
+                eq.includes('course / ext') ||
+                eq.includes('piste') ||
+                eq.includes('ext')
+              ) {
+                return;
+              }
+              const found = okNames.some(
+                (n) =>
+                  n.includes(eq) ||
+                  (eq.includes('barre') && (n.includes('rack') || n.includes('muscu') || n.includes('barre'))) ||
+                  (eq.includes('halt') && n.includes('muscu')) ||
+                  (eq.includes('poulie') && n.includes('muscu')) ||
+                  (eq.includes('cardio') && (n.includes('cardio') || n.includes('vélo') || n.includes('rameur')))
+              );
               if (!found) missingEquipExercises.add(`${ex.name} (${eq})`);
             })
           );
@@ -516,9 +534,22 @@ export const checkSessionEquipmentCompatibility = (
   ensureSessionBlocks(session).forEach((blk) => {
     blk.exercises.forEach((ex) => {
       const lib = libById.get(ex.libraryId) || libByName.get(ex.name.toLowerCase());
-      const reqEq = ex.equipment || lib?.equipment || 'PDC';
+      const reqEq = ex.equipment || lib?.equipment || 'Poids du corps / Tapis';
       const eqLower = reqEq.toLowerCase();
-      if (['pdc', 'tapis', 'piste', 'extérieur', 'piste / extérieur', 'piste athlétisme', 'extérieur / parcours'].includes(eqLower)) {
+      if (
+        [
+          'pdc',
+          'tapis',
+          'poids du corps / tapis',
+          'élastiques',
+          'course / extérieur',
+          'piste',
+          'extérieur',
+          'piste / extérieur',
+          'piste athlétisme',
+          'extérieur / parcours'
+        ].includes(eqLower)
+      ) {
         return;
       }
 
@@ -527,9 +558,11 @@ export const checkSessionEquipmentCompatibility = (
         operationalTokens.some(
           (tok) =>
             tok.includes(eqLower) ||
-            (eqLower.includes('barre') && (tok.includes('barre') || tok.includes('rack') || tok.includes('banc'))) ||
+            (eqLower.includes('barre') && (tok.includes('barre') || tok.includes('rack') || tok.includes('banc') || tok.includes('musculation'))) ||
             (eqLower.includes('halt') && (tok.includes('halt') || tok.includes('musculation'))) ||
             (eqLower.includes('poulie') && (tok.includes('poulie') || tok.includes('musculation'))) ||
+            (eqLower.includes('machine guidée') && tok.includes('musculation')) ||
+            (eqLower.includes('machine cardio') && (tok.includes('cardio') || tok.includes('rameur') || tok.includes('vélo'))) ||
             (eqLower.includes('rameur') && tok.includes('rameur')) ||
             (eqLower.includes('vélo') && (tok.includes('vélo') || tok.includes('bike')))
         );

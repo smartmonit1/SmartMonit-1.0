@@ -81,10 +81,26 @@ export const createDefaultTernaryBlocks = (uid = Date.now()): SessionBlock[] => 
 ];
 
 export const buildExerciseFromLibraryItem = (item: ExerciseLibraryItem): ProgramExercise => {
-  const isRun = item.category === 'Course' || item.category === 'Machine Cardio';
-  const isMob = item.category === 'Pilates' || item.type === 'Mobility';
-  const isMarch = item.category === 'Marche / Franchissement';
-  const isPdc = item.equipment === 'PDC' || item.equipment === 'Tapis';
+  const isRun =
+    item.category === 'Course' ||
+    item.category === 'Cardio en salle' ||
+    item.category === 'Machine Cardio';
+  const isMob =
+    item.category === 'Pilates' ||
+    item.category === 'Mobilité' ||
+    item.category === 'Échauffement' ||
+    item.type === 'Mobility';
+  const isMarch =
+    item.category === 'Marche / Franchissement' || item.movementPattern === 'CARRY';
+  const eqLower = (item.equipment || '').toLowerCase();
+  const isPdc =
+    eqLower === 'pdc' ||
+    eqLower === 'tapis' ||
+    eqLower.includes('poids du corps');
+  const formattedTempo =
+    item.tempoDefault && /^\d{4}$/.test(item.tempoDefault)
+      ? item.tempoDefault.split('').join('-')
+      : undefined;
 
   return {
     id: `ex_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -102,6 +118,7 @@ export const buildExerciseFromLibraryItem = (item: ExerciseLibraryItem): Program
     holdSec: isMob ? 45 : undefined,
     distanceMeters: isMarch ? 8000 : undefined,
     carriedLoadKg: isMarch ? 12 : undefined,
+    tempo: formattedTempo,
     rest: isMob ? '0:30' : '1:30',
     restSec: isMob ? 30 : 90,
     adaptationBounds: {
